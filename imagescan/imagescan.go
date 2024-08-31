@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/dsoprea/go-exif"
+	"github.com/tinx/proto-artbattle/database"
 )
 
 func Scan(root string) error {
@@ -31,21 +32,21 @@ func ScanEntry(path string, info os.FileInfo, err error) error {
 
 	f, err := os.Open(path)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "file walk error: %s\n", err)
-		return err
+		fmt.Fprintf(os.Stderr, "can't open file '%s' error: %s\n", path, err)
+		return nil // not err -> continue with next file
 	}
 	defer f.Close()
 
 	data, err := ioutil.ReadAll(f)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "file read error: %s\n", err)
-		return err
+		return nil // not err -> continue with next file
 	}
 
 	rawExif, err := exif.SearchAndExtractExif(data)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "find exif error: %s\n", err)
-		return err
+		return nil // not err -> continue with next file
 	}
 
 	im := exif.NewIfdMappingWithStandard()
@@ -55,12 +56,12 @@ func ScanEntry(path string, info os.FileInfo, err error) error {
 		ifdPath, err := im.StripPathPhraseIndices(fqIfdPath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "strip path error: %s\n", err)
-			return err
+			return nil // not err -> continue with next file
 		}
 		it, err := ti.Get(ifdPath, tagId)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "exif get error: %s\n", err)
-			return err
+			return nil // not err -> continue with next file
 		}
 
 		if it.Name != "UserComment" {
@@ -73,20 +74,20 @@ func ScanEntry(path string, info os.FileInfo, err error) error {
 			value, err = valueContext.Undefined()
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "exif value context error: %s\n", err)
-				return err
+				return nil // not err -> continue with next file
 			}
 			tmp, ok := value.(exif.TagUnknownType_9298_UserComment)
 			if !ok {
 				fmt.Fprintf(os.Stderr, "unexpected unknow type error, expected very specific unknown type 9298. error:  %s\n", err)
-				return err
+				return nil // not err -> continue with next file
 			}
 			tmp2, _ := tmp.ValueBytes()
 			header := tmp2[:5]
 			if string(header) != "ASCII" {
 				fmt.Fprintf(os.Stderr, "unexpected header\n")
-				return err
+				return nil // not err -> continue with next file
 			}
-			tmp2 = tmp2[8:] // ASCII plus three null bytes
+			tmp2 = tmp2[8:] // cut off ASCII plus three null bytes
 			valueString = string(tmp2)
 		} else {
 			valueString, err = valueContext.FormatFirst()
@@ -99,8 +100,8 @@ func ScanEntry(path string, info os.FileInfo, err error) error {
 
 	_, err = exif.Visit(exif.IfdStandard, im, ti, rawExif, visitor)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "exif visitor error: %s\n", err)
-		return err
+		fmt.Fprintf(os.Stderr, "warn: exif visitor error: %s\n", err)
+		return nil // not err -> continue with next file
 	}
 
 	return nil
@@ -142,6 +143,8 @@ func parseExifUserComment(path string, usercomment string) {
 	fmt.Printf("TAG title: %s\n", title)
 	fmt.Printf("TAG panel: %s\n", panel)
 	fmt.Printf("Comment: %s\n", usercomment)
+
+	updateArtworkRecord(path, artist, title, panel)
 }
 
 func splitLine(path string, line string, expected_key string) (value string, err error) {
@@ -157,4 +160,31 @@ func splitLine(path string, line string, expected_key string) (value string, err
 		return "", fmt.Errorf("unexpected key")
 	}
 	return value, nil
+}
+
+func updateArtworkRecord(path string, artist string, title string, panel string) {
+	db, err := database.GetDB();
+	a, err := db.GetArtworkByFilename(path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error fetching db record for file '%s'. %s\n", path, err)
+		return
+	}
+	if a != nil {
+		// file is already know to our database -> do nothing
+		return
+	}
+	fmt.Println("No record found, adding to database.")
+	a = &database.Artwork{
+		Title: title,
+		Artist: artist,
+		Panel: panel,
+		Filename: path,
+		EloRating: 800,
+		DuelCount: 0,
+	}
+	err = db.AddArtwork(a)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error creating db record for file '%s'. %s\n", path, err)
+	}
+	return
 }

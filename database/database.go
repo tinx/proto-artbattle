@@ -1,6 +1,8 @@
 package database
 
 import (
+	"errors"
+
 	"gorm.io/gorm"
 	"gorm.io/driver/mysql"
 )
@@ -19,8 +21,15 @@ type MysqlRepository struct {
 	db	*gorm.DB
 }
 
+var _db *MysqlRepository
+
+func GetDB() (*MysqlRepository, error) {
+	return _db, nil
+}
+
 func Create() *MysqlRepository {
-	return &MysqlRepository{}
+	_db = &MysqlRepository{}
+	return _db
 }
 
 func (r *MysqlRepository) Open(dsn string) error {
@@ -34,6 +43,7 @@ func (r *MysqlRepository) Open(dsn string) error {
 }
 
 func (r *MysqlRepository) Close() {
+	_db = nil
 	// no-op in Gorm v2
 }
 
@@ -68,6 +78,18 @@ func (r *MysqlRepository) GetArtworkById(id int64) (*Artwork, error) {
 	err := r.db.First(&a, id).Error
 	if err != nil {
 		return nil, err
+	}
+	return &a, nil
+}
+
+func (r *MysqlRepository) GetArtworkByFilename(filename string) (*Artwork, error) {
+	var a Artwork
+	result := r.db.Where("filename = ?", filename).First(&a)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, result.Error
 	}
 	return &a, nil
 }
