@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
-//	"github.com/rwcarlsen/goexif/exif"
 	"github.com/dsoprea/go-exif"
 )
 
@@ -25,8 +25,7 @@ func ScanEntry(path string, info os.FileInfo, err error) error {
 		return err
 	}
 
-	fmt.Printf("%s\n", path)
-	if info.IsDir() {
+	if !info.Mode().IsRegular() {
 		return nil
 	}
 
@@ -42,8 +41,6 @@ func ScanEntry(path string, info os.FileInfo, err error) error {
 		fmt.Fprintf(os.Stderr, "file read error: %s\n", err)
 		return err
 	}
-
-	fmt.Printf("read %d bytes\n", len(data))
 
 	rawExif, err := exif.SearchAndExtractExif(data)
 	if err != nil {
@@ -72,7 +69,6 @@ func ScanEntry(path string, info os.FileInfo, err error) error {
 
 		valueString := ""
 		var value interface{}
-		fmt.Println("tag name: " + it.Name)
 		if tagType.Type() == exif.TypeUndefined {
 			value, err = valueContext.Undefined()
 			if err != nil {
@@ -85,12 +81,18 @@ func ScanEntry(path string, info os.FileInfo, err error) error {
 				return err
 			}
 			tmp2, _ := tmp.ValueBytes()
-			tmp2 = tmp2[5:]
+			header := tmp2[:5]
+			if string(header) != "ASCII" {
+				fmt.Fprintf(os.Stderr, "unexpected header\n")
+				return err
+			}
+			tmp2 = tmp2[8:] // ASCII plus three null bytes
 			valueString = string(tmp2)
 		} else {
 			valueString, err = valueContext.FormatFirst()
 		}
-		fmt.Println("tag value: " + valueString)
+
+		parseExifUserComment(path, valueString)
 
 		return nil
 	}
@@ -101,28 +103,58 @@ func ScanEntry(path string, info os.FileInfo, err error) error {
 		return err
 	}
 
-	/*
-	jmp := jpegstructure.NewJpegMediaParser();
-	intfc, err := jmp.ParseFile(path)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "file walk error: %s\n", err)
-		return err
-	}
-
-	sl := intfc.(*SegmentList)
-	sl.Print()
-	*/
-
-	/*
-	x,err := exif.Decode(f)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "exif decode error: %s\n", err)
-		return err
-	}
-
-	comment, err := x.Get(exif.UserComment)
-	fmt.Println(comment)
-	*/
-
 	return nil
+}
+
+func parseExifUserComment(path string, usercomment string) {
+	lines := strings.Split(usercomment, "\n")
+
+	if len(lines) < 4 {
+		fmt.Fprintf(os.Stderr, "warn: short exif data, path=%s\n", path)
+		return
+	}
+
+	/* verifz format version */
+	tag_version, err := splitLine(path, lines[0], "ef-artshow-tags-version")
+	if err != nil {
+		return
+	}
+	if tag_version != "v1" {
+		fmt.Fprintf(os.Stderr, "warn: unexpected tags version: %s, path=%s\n", tag_version, path)
+		return
+	}
+
+	artist, err := splitLine(path, lines[1], "artist")
+	if err != nil {
+		return
+	}
+	title, err := splitLine(path, lines[2], "title")
+	if err != nil {
+		return
+	}
+	panel, err := splitLine(path, lines[3], "panel")
+	if err != nil {
+		return
+	}
+
+	fmt.Printf("tag version: %s\n", tag_version)
+	fmt.Printf("TAG artist: %s\n", artist)
+	fmt.Printf("TAG title: %s\n", title)
+	fmt.Printf("TAG panel: %s\n", panel)
+	fmt.Printf("Comment: %s\n", usercomment)
+}
+
+func splitLine(path string, line string, expected_key string) (value string, err error) {
+	key, value, found := strings.Cut(line, ":")
+	if !found {
+		fmt.Fprintf(os.Stderr, "warn: parse error, no colon found in exif line, path=%s, %s\n", path)
+		return "", fmt.Errorf("splitLine: no colon found")
+	}
+	key = strings.Trim(key, " \n")
+	value = strings.Trim(value, " \n")
+	if key != expected_key {
+		fmt.Fprintf(os.Stderr, "warn: parse error, unexpected key: '%s', expected '%s',, path=%s, %s\n", key, expected_key, path, err)
+		return "", fmt.Errorf("unexpected key")
+	}
+	return value, nil
 }
