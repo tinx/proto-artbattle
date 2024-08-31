@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/olahol/melody"
@@ -30,8 +31,6 @@ func main() {
 		fmt.Fprintf(os.Stderr, "error migrating database: %v\n", err)
 		os.Exit(1)
 	}
-
-	// fill_db(db)
 
 	imagescan.Scan(Config.ImagePath)
 
@@ -60,6 +59,45 @@ func main() {
 				content, _ := os.ReadFile(ev.Name)
 				m.Broadcast(content)
 				fmt.Println("file change")
+			}
+		}
+	}()
+
+	go func() {
+		/* Finite State Machine
+		 *  Start -> Duel
+		 *  Duel -> Timeout
+		 *  Duel -> Decision
+		 *  Decision -> Duel
+		 *  Timeout -> Leaderboard
+		 *  Leaderboard -> SplashScreen
+		 *  SplashScreen -> Duel
+		 */
+		var state string = "Start";
+		for {
+			switch state {
+			case "Start":
+				state = "Duel"
+			case "Duel":
+				m.Broadcast([]byte("Duel"))
+				time.Sleep(10 * time.Second)
+				state = "Timeout"
+			case "Timeout":
+				m.Broadcast([]byte("Timeout"))
+				state = "Leaderboard"
+			case "Leaderboard":
+				m.Broadcast([]byte("Leaderboard"))
+				time.Sleep(5 * time.Second)
+				state = "SplashScreen"
+			case "SplashScreen":
+				m.Broadcast([]byte("SplashScreen"))
+				time.Sleep(5 * time.Second)
+				state = "Duel"
+			case "Decision":
+				m.Broadcast([]byte("Decision"))
+				state = "Duel"
+			default:
+				state = "Duel"
 			}
 		}
 	}()
