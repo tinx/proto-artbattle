@@ -52,6 +52,31 @@ func main() {
 		s.Write(content)
 	})
 
+	serialPort, err := os.Open("/dev/pts/5")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "can't open serial port: %s\n", err)
+		os.Exit(1)
+	}
+	defer serialPort.Close()
+
+	sp := make(chan []byte, 1)
+
+	/* send all serial port input into channel "sp" so we
+	   can select() from it. */
+	go func() {
+		buf := make([]byte, 1)
+		for {
+			count, err := serialPort.Read(buf)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "serial read error: %s\n", err)
+				os.Exit(1)
+			}
+			if count > 0 {
+				sp <- buf
+			}
+		}
+	}()
+
 	go func() {
 		for {
 			ev := <-w.Events
@@ -80,21 +105,26 @@ func main() {
 				state = "Duel"
 			case "Duel":
 				m.Broadcast([]byte("Duel"))
-				time.Sleep(10 * time.Second)
-				state = "Timeout"
+				input := waitForSerialPort(sp, 10 * time.Second)
+				if input == "" {
+					state = "Timeout"
+				} else {
+					state = "Decision"
+				}
 			case "Timeout":
 				m.Broadcast([]byte("Timeout"))
 				state = "Leaderboard"
 			case "Leaderboard":
 				m.Broadcast([]byte("Leaderboard"))
-				time.Sleep(5 * time.Second)
+				waitForSerialPort(sp, 5 * time.Second)
 				state = "SplashScreen"
 			case "SplashScreen":
 				m.Broadcast([]byte("SplashScreen"))
-				time.Sleep(5 * time.Second)
+				waitForSerialPort(sp, 5 * time.Second)
 				state = "Duel"
 			case "Decision":
 				m.Broadcast([]byte("Decision"))
+				waitForSerialPort(sp, 5 * time.Second)
 				state = "Duel"
 			default:
 				state = "Duel"
@@ -142,5 +172,15 @@ func fill_db(db *database.MysqlRepository) {
 	}
 	fmt.Printf("Title: %s\n", res.Title)
 
+}
+
+func waitForSerialPort(c chan []byte, timeout time.Duration) string {
+	select {
+	case ret := <-c:
+		return string(ret)
+	case <-time.After(timeout):
+		return ""
+	}
+	return ""
 }
 
