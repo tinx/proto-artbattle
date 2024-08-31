@@ -8,6 +8,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/olahol/melody"
 	"github.com/tinx/proto-artbattle/database"
+	"github.com/tinx/proto-artbattle/imagescan"
 )
 
 func main() {
@@ -30,7 +31,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	fill_db(db)
+	// fill_db(db)
+
+	imagescan.Scan(Config.ImagePath)
 
 	file := "file.txt"
 
