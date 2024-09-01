@@ -138,6 +138,9 @@ func (r *MysqlRepository) GetArtworksWithSimilarEloRating(benchmark *Artwork, co
 		lc = lc + 1
 		res = append([]*Artwork{&a}, res...)
 	}
+	if len(res) < count {
+		count = len(res)
+	}
 	return res[:count], nil
 }
 

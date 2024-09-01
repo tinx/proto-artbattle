@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"encoding/json"
+	"math/rand"
 	"net/http"
 	"os"
 	"time"
@@ -11,6 +13,22 @@ import (
 	"github.com/tinx/proto-artbattle/database"
 	"github.com/tinx/proto-artbattle/imagescan"
 )
+
+type ArtworkDTO struct {
+	ID		uint   `json:"id"`
+	Title		string `json:"title"`
+	Artist		string `json:"artist"`
+	Filename	string `json:"filename"`
+	Panel		string `json:"panel"`
+	EloRating	uint16 `json:"elo_rating"`
+	DuelCount	uint64 `json:"duel_count"`
+}
+
+type DuelDTO struct {
+	Red		ArtworkDTO `json:"red"`
+	Blue		ArtworkDTO `json:"blue"`
+
+}
 
 func main() {
 	err := LoadConfiguration()
@@ -97,14 +115,30 @@ func main() {
 		 *  Timeout -> Leaderboard
 		 *  Leaderboard -> SplashScreen
 		 *  SplashScreen -> Duel
+		 *  * -> Error
+		 *  Error -> Duel
 		 */
-		var state string = "Start";
+		var state string = "Start"
+		var lastError = ""
+		var a1, a2 *database.Artwork
 		for {
 			switch state {
 			case "Start":
 				state = "Duel"
 			case "Duel":
-				m.Broadcast([]byte("Duel"))
+				a1, a2, err = generateDuel(db)
+				if err != nil {
+					state = "Error"
+					lastError = fmt.Sprintf("Duel error: %s", err)
+					continue
+				}
+				json, err := encodeDuelToJson(a1, a2)
+				if err != nil {
+					state = "Error"
+					lastError = fmt.Sprintf("Duel error: %s", err)
+					continue
+				}
+				m.Broadcast([]byte("DUEL: " + json))
 				input := waitForSerialPort(sp, 10 * time.Second)
 				if input == "" {
 					state = "Timeout"
@@ -113,6 +147,7 @@ func main() {
 				}
 			case "Timeout":
 				m.Broadcast([]byte("Timeout"))
+				waitForSerialPort(sp, 3 * time.Second)
 				state = "Leaderboard"
 			case "Leaderboard":
 				m.Broadcast([]byte("Leaderboard"))
@@ -125,6 +160,10 @@ func main() {
 			case "Decision":
 				m.Broadcast([]byte("Decision"))
 				waitForSerialPort(sp, 5 * time.Second)
+				state = "Duel"
+			case "Error":
+				m.Broadcast([]byte("Error: " + lastError))
+				waitForSerialPort(sp, 30 * time.Second)
 				state = "Duel"
 			default:
 				state = "Duel"
@@ -184,3 +223,49 @@ func waitForSerialPort(c chan []byte, timeout time.Duration) string {
 	return ""
 }
 
+func generateDuel(db *database.MysqlRepository) (*database.Artwork, *database.Artwork, error) {
+	a1, err := db.GetArtworkWithLowestDuelCount()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error loading artwork: %s\n", err)
+		return nil, nil, err
+	}
+	a2, err := getDuelPartner(db, a1)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error getting duel partner: %s\n", err)
+		return nil, nil, err
+	}
+	return a1, a2, nil
+}
+
+func getDuelPartner(db *database.MysqlRepository, a *database.Artwork) (*database.Artwork, error) {
+	/* get 50 possible contenders with similar Elo rating */
+	artworks, err := db.GetArtworksWithSimilarEloRating(a, 50)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error with contender list: %s\n", err)
+		return nil, err
+	}
+	/* version 1: just return a random element */
+	return artworks[rand.Intn(len(artworks))], nil
+}
+
+func encodeArtworkToDTO(a *database.Artwork, dto *ArtworkDTO) {
+	dto.ID = a.ID
+	dto.Title = a.Title
+	dto.Artist = a.Artist
+	dto.Filename = a.Filename
+	dto.Panel = a.Panel
+	dto.EloRating = a.EloRating
+	dto.DuelCount = a.DuelCount
+}
+
+func encodeDuelToJson(a1, a2 *database.Artwork) (string, error) {
+	var dto DuelDTO
+	encodeArtworkToDTO(a1, &dto.Red)
+	encodeArtworkToDTO(a2, &dto.Blue)
+	j, err := json.Marshal(dto)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "json marhsal error: %s\n", err)
+		return "", err
+	}
+	return string(j), nil
+}
