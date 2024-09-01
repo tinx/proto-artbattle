@@ -103,6 +103,21 @@ func (r *MysqlRepository) GetArtworkWithLowestDuelCount() (*Artwork, error) {
 	return &a, nil
 }
 
+func (r *MysqlRepository) GetLeaderboard(maxcount int) ([]*Artwork, error) {
+	var lb []*Artwork
+	rows, err := r.db.Table("artworks").Order("elo_rating, id desc").Limit(maxcount).Rows()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var a Artwork
+		r.db.ScanRows(rows, &a)
+		lb = append(lb, &a)
+	}
+	return lb, nil
+}
+
 func (r *MysqlRepository) GetArtworksWithSimilarEloRating(benchmark *Artwork, count int) ([]*Artwork, error) {
 	/* step 1: load up to 'count' artworks with elo higher than benchmark
 	   step 2: load up to 'count - row_count' artworks with lower or

@@ -30,6 +30,11 @@ type DuelDTO struct {
 
 }
 
+type LeaderboardDTO struct {
+	Count		int `json:"count"`
+	Entries		[]ArtworkDTO `json:"entries"`
+}
+
 func main() {
 	err := LoadConfiguration()
 	if (err != nil) {
@@ -146,11 +151,23 @@ func main() {
 					state = "Decision"
 				}
 			case "Timeout":
-				m.Broadcast([]byte("Timeout"))
+				json, err := encodeDuelToJson(a1, a2)
+				if err != nil {
+					state = "Error"
+					lastError = fmt.Sprintf("timeout error: %s", err)
+					continue
+				}
+				m.Broadcast([]byte("TIMEOUT: " + json))
 				waitForSerialPort(sp, 3 * time.Second)
 				state = "Leaderboard"
 			case "Leaderboard":
-				m.Broadcast([]byte("Leaderboard"))
+				json, err := getLeaderboard(db)
+				if err != nil {
+					state = "Error"
+					lastError = fmt.Sprintf("imeout errorderboard: %s", err)
+					continue
+				}
+				m.Broadcast([]byte("LEADERBOARD: " + json))
 				waitForSerialPort(sp, 5 * time.Second)
 				state = "SplashScreen"
 			case "SplashScreen":
@@ -262,6 +279,41 @@ func encodeDuelToJson(a1, a2 *database.Artwork) (string, error) {
 	var dto DuelDTO
 	encodeArtworkToDTO(a1, &dto.Red)
 	encodeArtworkToDTO(a2, &dto.Blue)
+	j, err := json.Marshal(dto)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "json marhsal error: %s\n", err)
+		return "", err
+	}
+	return string(j), nil
+}
+
+func getLeaderboard(db *database.MysqlRepository) (string, error) {
+	lb, err := db.GetLeaderboard(10)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error getting leaderboard: %s\n", err)
+		return "", err
+	}
+	dto, err := encodeLeaderboardToDTO(lb)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error encoding leaderboard: %s\n", err)
+		return "", err
+	}
+	j, err := json.Marshal(dto)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "json marhsal error: %s\n", err)
+		return "", err
+	}
+	return string(j), nil
+}
+
+func encodeLeaderboardToDTO(lb []*database.Artwork) (string, error) {
+	var dto LeaderboardDTO
+	dto.Count = len(lb)
+	for _, a := range lb {
+		var aw_dto ArtworkDTO
+		encodeArtworkToDTO(a, &aw_dto)
+		dto.Entries = append(dto.Entries, aw_dto)
+	}
 	j, err := json.Marshal(dto)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "json marhsal error: %s\n", err)
