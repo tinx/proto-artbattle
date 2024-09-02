@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"encoding/json"
+	"math"
 	"math/rand"
 	"net/http"
 	"os"
@@ -20,7 +21,7 @@ type ArtworkDTO struct {
 	Artist		string `json:"artist"`
 	Filename	string `json:"filename"`
 	Panel		string `json:"panel"`
-	EloRating	uint16 `json:"elo_rating"`
+	EloRating	int16 `json:"elo_rating"`
 	DuelCount	uint64 `json:"duel_count"`
 }
 
@@ -37,11 +38,11 @@ type LeaderboardDTO struct {
 type DecisionDTO struct {
 	Red		ArtworkDTO `json:"red"`
 	Blue		ArtworkDTO `json:"blue"`
-	Winner		string
-	RedEloDiff	int
-	RedRankDiff	int64
-	BlueEloDiff	int
-	BlueRankDiff	int64
+	Winner		string `json:"winner"`
+	RedEloDiff	int16 `json:"red_elo_diff"`
+	RedRankDiff	int64 `json:"red_rank_diff"`
+	BlueEloDiff	int16 `json:"blue_elo_diff"`
+	BlueRankDiff	int64 `json:"blue_rank_diff"`
 }
 
 func main() {
@@ -84,7 +85,7 @@ func main() {
 		s.Write(content)
 	})
 
-	serialPort, err := os.Open("/dev/pts/4")
+	serialPort, err := os.Open("/dev/pts/5")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "can't open serial port: %s\n", err)
 		os.Exit(1)
@@ -355,23 +356,26 @@ func processDecision(db *database.MysqlRepository, a1 *database.Artwork, a2 *dat
 	 *  - implement Elo points instead of a fixed +10/-10
 	 */
 	var dto DecisionDTO
+	var winner string
 	a1_rank_old, err := db.GetArtworkRank(a1)
 	a2_rank_old, err := db.GetArtworkRank(a2)
+	var a1ed, a2ed int16
 	/* Adjust depending on decision */
 	if decision == 'r' {
-		a1.EloRating = a1.EloRating + 10
-		a2.EloRating = a2.EloRating - 10
-		dto.RedEloDiff = 10
-		dto.BlueEloDiff = -10
+		a1ed, a2ed = eloRatingAdjustments(a1.EloRating, a2.EloRating)
+		winner = "red"
 	} else if decision == 'b' {
-		a1.EloRating = a1.EloRating - 10
-		a2.EloRating = a2.EloRating + 10
-		dto.RedEloDiff = -10
-		dto.BlueEloDiff = 10
+		a1ed, a2ed = eloRatingAdjustments(a2.EloRating, a1.EloRating)
+		winner = "blue"
 	} else {
 		fmt.Fprintf(os.Stderr, "unexpected decision: %c\n", decision)
 		return "", err
 	}
+
+	a1.EloRating = a1.EloRating + a1ed
+	a2.EloRating = a2.EloRating + a2ed
+	dto.RedEloDiff = a1ed
+	dto.BlueEloDiff = a2ed
 
 	a1.DuelCount = a1.DuelCount + 1
 	a2.DuelCount = a2.DuelCount + 1
@@ -391,6 +395,7 @@ func processDecision(db *database.MysqlRepository, a1 *database.Artwork, a2 *dat
 
 	dto.RedRankDiff = a1_rank_old - a1_rank_new
 	dto.BlueRankDiff = a2_rank_old - a2_rank_new
+	dto.Winner = winner
 
 	encodeArtworkToDTO(a1, &dto.Red)
 	encodeArtworkToDTO(a2, &dto.Blue)
@@ -402,3 +407,26 @@ func processDecision(db *database.MysqlRepository, a1 *database.Artwork, a2 *dat
 	}
 	return string(j), nil
 }
+
+/* Elo rating: the points scored by the winner (and paid for by the loser)
+   depend on the rating of the players.  Highly rated players can only gain
+   few points from winning against low rated players, but they can lose a
+   lot of points. */
+func eloRatingAdjustments(elo_winner, elo_loser int16) (int16, int16) {
+	/* The K-factor is fixed to 16 for simplicity reasons, but it could
+	   depend on the elo ranking of the winner/loser. See Wikipedia
+	   on the Elo rating system and k-factor. */
+	var k_factor = 16.0
+
+	elo_w := float64(elo_winner)
+	elo_l := float64(elo_loser)
+
+	expected_score_loser  := 1.0 / (1.0 + math.Pow(10, float64((elo_l - elo_w)/400.0)))
+	elo_diff_loser := k_factor * (1.0 - expected_score_loser)
+	if elo_diff_loser <= 1.0 {
+		elo_diff_loser = 1.0
+	}
+
+	return int16(math.Round(elo_diff_loser)), int16(math.Round(-elo_diff_loser))
+}
+

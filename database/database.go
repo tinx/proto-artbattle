@@ -14,7 +14,7 @@ type Artwork struct {
 	Panel		string	`gorm:"type:varchar(10); NOT NULL"`
 	Filename	string	`gorm:"type:varchar(120); NOT NULL"`
 	DuelCount	uint64	`gorm:"index:idx_duel_count"`
-	EloRating	uint16	`gorm:"index:idx_elo_rating"`
+	EloRating	int16	`gorm:"index:idx_elo_rating"`
 }
 
 type MysqlRepository struct {

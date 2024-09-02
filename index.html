@@ -24,8 +24,20 @@
       var c = new WebSocket(url);
 
       c.onmessage = function(msg){
+	mparts = msg.data.split(/: /, 2)
+	if (typeof mparts[1] === 'undefined') return;
         var el = document.getElementById("file");
-        el.innerText = msg.data;
+	if (mparts[0] == "DECISION") {
+          json = JSON.parse(mparts[1]);
+	  el.innerText = "Decision\nWinner:" + json.winner + "\n" +
+		"elo red: " + json.red.elo_rating + "\n" +
+		"elo blue: " + json.blue.elo_rating + "\n" +
+		"elo diff red: " + json.red_elo_diff + "\n" +
+		"elo diff blue: " + json.blue_elo_diff + "\n"
+	  console.log(json)
+	} else {
+	  el.innerText = "event: " + mparts[0] + "\n" + mparts[1];
+	}
       }
     </script>
   </body>
