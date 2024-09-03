@@ -86,6 +86,10 @@ func main() {
 		s.Write(content)
 	})
 
+	m.HandleMessage(func(s *melody.Session, msg []byte) {
+		s.Write([]byte("PONG: {}"))
+	})
+
 	serialPort, err := os.Open("/dev/pts/5")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "can't open serial port: %s\n", err)
@@ -109,17 +113,6 @@ func main() {
 			if count > 0 {
 				//sp <- buf[0:1]
 				sp <- buf[count-1:count]
-			}
-		}
-	}()
-
-	go func() {
-		for {
-			ev := <-w.Events
-			if ev.Op == fsnotify.Write {
-				content, _ := os.ReadFile(ev.Name)
-				m.Broadcast(content)
-				fmt.Println("file change")
 			}
 		}
 	}()

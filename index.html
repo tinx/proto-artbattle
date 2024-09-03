@@ -20,24 +20,61 @@
     </center>
 
     <script>
-      var url = 'ws://' + window.location.host + '/ws';
-      var c = new WebSocket(url);
 
-      c.onmessage = function(msg){
-	mparts = msg.data.split(/: /, 2)
-	if (typeof mparts[1] === 'undefined') return;
-        var el = document.getElementById("file");
-	if (mparts[0] == "DECISION") {
-          json = JSON.parse(mparts[1]);
-	  el.innerText = "Decision\nWinner:" + json.winner + "\n" +
-		"elo red: " + json.red.elo_rating + "\n" +
-		"elo blue: " + json.blue.elo_rating + "\n" +
-		"elo diff red: " + json.red_elo_diff + "\n" +
-		"elo diff blue: " + json.blue_elo_diff + "\n"
-	} else {
-	  el.innerText = "event: " + mparts[0] + "\n" + mparts[1];
-	}
+      var ping_started = false;
+      var ws;
+
+      function connect() {
+	      var url = 'ws://' + window.location.host + '/ws';
+	      ws = new WebSocket(url);
+
+	      ws.onopen = function() {
+		if (!ping_started) {
+		  ping_started = true;
+		  setInterval(ping, 3000);
+		}
+	      }
+
+	      function ping() {
+		if (ws !== undefined && ws.readyState === 1) {
+		  ws.send("PING: {}");
+		}
+	      }
+	      
+	      ws.onclose = function(e) {
+		ws = undefined;
+		setTimeout(function() {
+		  connect();
+		}, 1000);
+	      }
+
+	      ws.onerror = function(e) {
+		ws = undefined;
+		setTimeout(function() {
+		  connect();
+		}, 1000);
+	      }
+
+	      ws.onmessage = function(msg){
+		mparts = msg.data.split(/: /, 2)
+		if (typeof mparts[1] === 'undefined') return;
+		var el = document.getElementById("file");
+		if (mparts[0] == "PONG") {
+		  // do nothing
+		} else if (mparts[0] == "DECISION") {
+		  json = JSON.parse(mparts[1]);
+		  el.innerText = "Decision\nWinner:" + json.winner + "\n" +
+			"elo red: " + json.red.elo_rating + "\n" +
+			"elo blue: " + json.blue.elo_rating + "\n" +
+			"elo diff red: " + json.red_elo_diff + "\n" +
+			"elo diff blue: " + json.blue_elo_diff + "\n"
+		} else {
+		  el.innerText = "event: " + mparts[0] + "\n" + mparts[1];
+		}
+
+	      }
       }
+      connect();
     </script>
   </body>
 </html>
