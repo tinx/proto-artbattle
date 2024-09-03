@@ -57,6 +57,10 @@ func (r *MysqlRepository) Migrate() error {
 	return nil
 }
 
+func (r *MysqlRepository) Transaction(tx func (*gorm.DB) error) error {
+	return r.db.Transaction(tx)
+}
+
 func (r *MysqlRepository) AddArtwork(a *Artwork) error {
 	err := r.db.Create(a).Error
 	if err != nil {
@@ -120,7 +124,7 @@ func (r *MysqlRepository) GetLeaderboard(maxcount int) ([]*Artwork, error) {
 
 func (r *MysqlRepository) GetArtworksWithSimilarEloRating(benchmark *Artwork, count int) ([]*Artwork, error) {
 	/* step 1: load up to 'count' artworks with elo higher than benchmark
-	   step 2: load up to 'count - row_count' artworks with lower or
+	   step 2: load an approriate number of artworks with lower or
 	   	   equal elo. Push out higher ones with lower ones */
 	var res []*Artwork
 	rows, err := r.db.Model(&Artwork{}).Where("elo_rating > ?", benchmark.EloRating).Order("elo_rating asc").Limit(count).Rows()
@@ -167,8 +171,22 @@ func (r *MysqlRepository) UpdateArtwork(a *Artwork) error {
 	return nil
 }
 
+func UpdateArtwork(db *gorm.DB, a *Artwork) error {
+	err := db.Save(a).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *MysqlRepository) GetArtworkRank(a *Artwork) (int64, error) {
 	var count int64
  	r.db.Model(&Artwork{}).Where("elo_rating > ?", a.EloRating).Count(&count)
+	return count + 1, nil
+}
+
+func GetArtworkRank(db *gorm.DB, a *Artwork) (int64, error) {
+	var count int64
+ 	db.Model(&Artwork{}).Where("elo_rating > ?", a.EloRating).Count(&count)
 	return count + 1, nil
 }

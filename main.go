@@ -13,6 +13,7 @@ import (
 	"github.com/olahol/melody"
 	"github.com/tinx/proto-artbattle/database"
 	"github.com/tinx/proto-artbattle/imagescan"
+	"gorm.io/gorm"
 )
 
 type ArtworkDTO struct {
@@ -351,51 +352,52 @@ func encodeLeaderboardToDTO(lb []*database.Artwork) (string, error) {
 }
 
 func processDecision(db *database.MysqlRepository, a1 *database.Artwork, a2 *database.Artwork, decision byte) (string, error) {
-	/* XXX TODO
-	 *  - put all of this into a transaction
-	 *  - implement Elo points instead of a fixed +10/-10
-	 */
 	var dto DecisionDTO
 	var winner string
-	a1_rank_old, err := db.GetArtworkRank(a1)
-	a2_rank_old, err := db.GetArtworkRank(a2)
-	var a1ed, a2ed int16
-	/* Adjust depending on decision */
-	if decision == 'r' {
-		a1ed, a2ed = eloRatingAdjustments(a1.EloRating, a2.EloRating)
-		winner = "red"
-	} else if decision == 'b' {
-		a1ed, a2ed = eloRatingAdjustments(a2.EloRating, a1.EloRating)
-		winner = "blue"
-	} else {
-		fmt.Fprintf(os.Stderr, "unexpected decision: %c\n", decision)
-		return "", err
+	process_decision := func(tx *gorm.DB) error {
+		a1_rank_old, err := database.GetArtworkRank(tx, a1)
+		a2_rank_old, err := database.GetArtworkRank(tx, a2)
+		var a1ed, a2ed int16
+		/* Adjust depending on decision */
+		if decision == 'r' {
+			a1ed, a2ed = eloRatingAdjustments(a1.EloRating, a2.EloRating)
+			winner = "red"
+		} else if decision == 'b' {
+			a2ed, a1ed = eloRatingAdjustments(a2.EloRating, a1.EloRating)
+			winner = "blue"
+		} else {
+			return fmt.Errorf("unexpected decision: %c\n", decision)
+		}
+
+		a1.EloRating = a1.EloRating + a1ed
+		a2.EloRating = a2.EloRating + a2ed
+		dto.RedEloDiff = a1ed
+		dto.BlueEloDiff = a2ed
+
+		a1.DuelCount = a1.DuelCount + 1
+		a2.DuelCount = a2.DuelCount + 1
+
+		err = database.UpdateArtwork(tx, a1)
+		if err != nil {
+			return fmt.Errorf("error updating artwork: %s\n", err)
+		}
+		err = database.UpdateArtwork(tx, a2)
+		if err != nil {
+			return fmt.Errorf("error updating artwork: %s\n", err)
+		}
+		a1_rank_new, err := database.GetArtworkRank(tx, a1)
+		a2_rank_new, err := database.GetArtworkRank(tx, a2)
+
+		dto.RedRankDiff = a1_rank_old - a1_rank_new
+		dto.BlueRankDiff = a2_rank_old - a2_rank_new
+		dto.Winner = winner
+		return nil
 	}
-
-	a1.EloRating = a1.EloRating + a1ed
-	a2.EloRating = a2.EloRating + a2ed
-	dto.RedEloDiff = a1ed
-	dto.BlueEloDiff = a2ed
-
-	a1.DuelCount = a1.DuelCount + 1
-	a2.DuelCount = a2.DuelCount + 1
-
-	err = db.UpdateArtwork(a1)
+	err := db.Transaction(process_decision)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error updating artwork: %s\n", err)
+		fmt.Fprintf(os.Stderr, "error processnig decision: %s\n", err)
 		return "", err
 	}
-	err = db.UpdateArtwork(a2)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error updating artwork: %s\n", err)
-		return "", err
-	}
-	a1_rank_new, err := db.GetArtworkRank(a1)
-	a2_rank_new, err := db.GetArtworkRank(a2)
-
-	dto.RedRankDiff = a1_rank_old - a1_rank_new
-	dto.BlueRankDiff = a2_rank_old - a2_rank_new
-	dto.Winner = winner
 
 	encodeArtworkToDTO(a1, &dto.Red)
 	encodeArtworkToDTO(a2, &dto.Blue)
