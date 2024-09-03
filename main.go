@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/fsnotify/fsnotify"
+//	"github.com/fsnotify/fsnotify"
 	"github.com/olahol/melody"
 	"github.com/tinx/proto-artbattle/database"
 	"github.com/tinx/proto-artbattle/imagescan"
@@ -68,10 +68,8 @@ func main() {
 
 	imagescan.Scan(Config.ImagePath)
 
-	file := "file.txt"
-
 	m := melody.New()
-	w, _ := fsnotify.NewWatcher()
+	// w, _ := fsnotify.NewWatcher()
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "index.html")
@@ -82,12 +80,15 @@ func main() {
 	})
 
 	m.HandleConnect(func(s *melody.Session) {
+		/* XXX TODO: send last Broadcast message */
+		/*
 		content, _ := os.ReadFile(file)
 		s.Write(content)
+		 */
 	})
 
 	m.HandleMessage(func(s *melody.Session, msg []byte) {
-		s.Write([]byte("PONG: {}"))
+		s.Write([]byte("PONG: "))
 	})
 
 	serialPort, err := os.Open("/dev/pts/5")
@@ -111,7 +112,6 @@ func main() {
 				os.Exit(1)
 			}
 			if count > 0 {
-				//sp <- buf[0:1]
 				sp <- buf[count-1:count]
 			}
 		}
@@ -201,7 +201,7 @@ func main() {
 		}
 	}()
 
-	w.Add(file)
+	// w.Add(file)
 
 	http.ListenAndServe(fmt.Sprintf(":%d", Config.Port), nil)
 }

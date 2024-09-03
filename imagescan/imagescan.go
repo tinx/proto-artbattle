@@ -138,12 +138,6 @@ func parseExifUserComment(path string, usercomment string) {
 		return
 	}
 
-	fmt.Printf("tag version: %s\n", tag_version)
-	fmt.Printf("TAG artist: %s\n", artist)
-	fmt.Printf("TAG title: %s\n", title)
-	fmt.Printf("TAG panel: %s\n", panel)
-	fmt.Printf("Comment: %s\n", usercomment)
-
 	updateArtworkRecord(path, artist, title, panel)
 }
 

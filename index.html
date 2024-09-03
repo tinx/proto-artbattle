@@ -1,25 +1,176 @@
 <html>
   <head>
-    <title>Melody example: file watching</title>
+    <title>Eurofurence Artshow - Art Battle</title>
   </head>
 
   <style>
-    #file {
+    html, body {
+	height: 100%;
+	margin: 0;
+	padding: 0;
+    }
+    #debug {
       text-align: left;
       background: #f1f1f1;
       width: 500px;
       min-height: 300px;
-      padding: 20px;
+      display: none;
+    }
+
+    #leaderboard {
+	text-align: left;
+	background: #208060;
+	width: 100%;
+	min-height: 100%;
+	display: none;
+    }
+
+    .leaderboard {
+	display: grid;
+	min-height: 100%;
+	height: 100%;
+	width: 100%;
+	grid-template-columns: 50px 1fr 50px 1fr 50px;
+	grid-template-rows: repeat(7, 1fr);
+	background: red;
+    }
+    .leaderboard-header {
+ 	grid-column: 1 / 5;
+	grid-row: 1 / 2;
+    }
+    .leaderboard-entry-left {
+ 	grid-column: 2 / 3;
+	background: blue;
+    }
+    .leaderboard-entry-right {
+ 	grid-column: 4 / 5;
+	background: blue;
     }
   </style>
 
   <body>
-    <center>
-      <h3>Watching a file</h3>
-      <pre id="file"></pre>
-    </center>
+    <pre id="debug"></pre>
+
+    <div id="leaderboard">
+	<div id="lb_grid" class="leaderboard">
+		<div class="leaderboard-header">Leaderboard</div>
+		<div class="leaderboard-entry-left" id="lb_rank_1">
+			<div id="lb_position_rank_1">1</div>
+			<div id="lb_image_rank_1"><img id="lb_img_rank_1" src=""></div>
+			<div id="lb_title_rank_1"></div>
+			<div id="lb_artist_rank_1"></div>
+			<div id="lb_elo_rating_rank_1"></div>
+		</div>
+		<div class="leaderboard-entry-right" id="lb_rank_2">
+			<div id="lb_position_rank_2">2</div>
+			<div id="lb_image_rank_2"><img id="lb_img_rank_2" src=""></div>
+			<div id="lb_title_rank_2"></div>
+			<div id="lb_artist_rank_2"></div>
+			<div id="lb_elo_rating_rank_2"></div>
+		</div>
+		<div class="leaderboard-entry-left" id="lb_rank_3">
+			<div id="lb_position_rank_3">3</div>
+			<div id="lb_image_rank_3"><img id="lb_img_rank_3" src=""></div>
+			<div id="lb_title_rank_3"></div>
+			<div id="lb_artist_rank_3"></div>
+			<div id="lb_elo_rating_rank_3"></div>
+		</div>
+		<div class="leaderboard-entry-right" id="lb_rank_4">
+			<div id="lb_position_rank_4">4</div>
+			<div id="lb_image_rank_4"><img id="lb_img_rank_4" src=""></div>
+			<div id="lb_title_rank_4"></div>
+			<div id="lb_artist_rank_4"></div>
+			<div id="lb_elo_rating_rank_4"></div>
+		</div>
+		<div class="leaderboard-entry-left" id="lb_rank_5">
+			<div id="lb_position_rank_5">5</div>
+			<div id="lb_image_rank_5"><img id="lb_img_rank_5" src=""></div>
+			<div id="lb_title_rank_5"></div>
+			<div id="lb_artist_rank_5"></div>
+			<div id="lb_elo_rating_rank_5"></div>
+		</div>
+		<div class="leaderboard-entry-right" id="lb_rank_6">
+			<div id="lb_position_rank_6">6</div>
+			<div id="lb_image_rank_6"><img id="lb_img_rank_6" src=""></div>
+			<div id="lb_title_rank_6"></div>
+			<div id="lb_artist_rank_6"></div>
+			<div id="lb_elo_rating_rank_6"></div>
+		</div>
+		<div class="leaderboard-entry-left" id="lb_rank_7">
+			<div id="lb_position_rank_7">7</div>
+			<div id="lb_image_rank_7"><img id="lb_img_rank_7" src=""></div>
+			<div id="lb_title_rank_7"></div>
+			<div id="lb_artist_rank_7"></div>
+			<div id="lb_elo_rating_rank_7"></div>
+		</div>
+		<div class="leaderboard-entry-right" id="lb_rank_8">
+			<div id="lb_position_rank_8">8</div>
+			<div id="lb_image_rank_8"><img id="lb_img_rank_8" src=""></div>
+			<div id="lb_title_rank_8"></div>
+			<div id="lb_artist_rank_8"></div>
+			<div id="lb_elo_rating_rank_8"></div>
+		</div>
+		<div class="leaderboard-entry-left" id="lb_rank_9">
+			<div id="lb_position_rank_9">9</div>
+			<div id="lb_image_rank_9"><img id="lb_img_rank_9" src=""></div>
+			<div id="lb_title_rank_9"></div>
+			<div id="lb_artist_rank_9"></div>
+			<div id="lb_elo_rating_rank_9"></div>
+		</div>
+		<div class="leaderboard-entry-right" id="lb_rank_10">
+			<div id="lb_position_rank_10">10</div>
+			<div id="lb_image_rank_10"><img id="lb_img_rank_10" src=""></div>
+			<div id="lb_title_rank_10"></div>
+			<div id="lb_artist_rank_10"></div>
+			<div id="lb_elo_rating_rank_10"></div>
+		</div>
+	</div>
+    </div>
 
     <script>
+      var screens = ["duel", "decision", "timeout", "leaderboard", "splash", "error"];
+
+      function displayScreen(s) {
+	for (i in screens) {
+	  elname = screens[i];
+	  var el = document.getElementById(elname);
+	  if (el === undefined || el == null)
+	    continue;
+	  if (elname == s) {
+	    el.style.display = "block";
+	  } else {
+	    el.style.display = "none";
+	  }
+	}
+      }
+
+      function updateLeaderboard(json) {
+	for (i = 0; i < 10; i++) {
+	  var lb_div = document.getElementById("lb_rank_" + (i+1));
+	  var lb_title = document.getElementById("lb_title_rank_" + (i+1));
+	  var lb_artist = document.getElementById("lb_artist_rank_" + (i+1));
+	  var lb_elo_rating = document.getElementById("lb_elo_rating_rank_" + (i+1));
+	  var lb_image = document.getElementById("lb_image_rank_" + (i+1));
+	  var lb_img = document.getElementById("lb_img_rank_" + (i+1));
+	  if (lb_title == null)
+	    continue;
+	  if (i >= json.count) {
+		/* less than ten entries -> blanks */
+		lb_div.style.display = "none";
+		lb_title.innerText = "";
+		lb_artist.innerText = "";
+		lb_img.src = "";
+		lb_elo_rating.innerText = "";
+		continue;
+          } else {
+	    lb_div.style.display = "block";
+	    lb_title.innerText = json.entries[i].title;
+	    lb_artist.innerText = json.entries[i].artist;
+	    lb_img.src = json.entries[i].filename;
+	    lb_elo_rating.innerText = json.entries[i].elo_rating;
+	  }
+	}
+      }
 
       var ping_started = false;
       var ws;
@@ -58,20 +209,37 @@
 	      ws.onmessage = function(msg){
 		mparts = msg.data.split(/: /, 2)
 		if (typeof mparts[1] === 'undefined') return;
-		var el = document.getElementById("file");
+		/* for some hellish javascript reason we have to run
+	   	   JSON.parse() twice. Once for normalizing the string and
+	   	   then again to get an object. This language is insane. */
+		var json;
+		if (mparts[1] != "") {
+		  j = JSON.parse(mparts[1]);
+		  if (typeof(j) == "object") {
+		    json = j;
+		  } else {
+		    json = JSON.parse(j);
+		  }
+		}
+		var el = document.getElementById("debug");
 		if (mparts[0] == "PONG") {
 		  // do nothing
 		} else if (mparts[0] == "DECISION") {
-		  json = JSON.parse(mparts[1]);
+		  displayScreen("decision");
 		  el.innerText = "Decision\nWinner:" + json.winner + "\n" +
 			"elo red: " + json.red.elo_rating + "\n" +
 			"elo blue: " + json.blue.elo_rating + "\n" +
 			"elo diff red: " + json.red_elo_diff + "\n" +
 			"elo diff blue: " + json.blue_elo_diff + "\n"
+		} else if (mparts[0] == "LEADERBOARD") {
+		  updateLeaderboard(json);
+	          setTimeout(function() {
+		    displayScreen("leaderboard");
+		  }, 300);
 		} else {
-		  el.innerText = "event: " + mparts[0] + "\n" + mparts[1];
+		  displayScreen("duel");
+		  el.innerText = "event: " + mparts[0]; // + "\n" + mparts[1];
 		}
-
 	      }
       }
       connect();
