@@ -30,21 +30,67 @@
 	min-height: 100%;
 	height: 100%;
 	width: 100%;
-	grid-template-columns: 50px 1fr 50px 1fr 50px;
-	grid-template-rows: repeat(7, 1fr);
-	background: red;
+	grid-template-columns: 100px 1fr 100px 1fr 100px;
+	grid-template-rows: repeat(6, 1fr) 20px;
+	row-gap: 40px;
+	background: #005953;
     }
     .leaderboard-header {
+	display: flex;
+	justify-content: center;
+	align-items: center;
  	grid-column: 1 / 5;
 	grid-row: 1 / 2;
+	color: white;
+	font-weight: bold;
+	font-size: 60pt;
+	text-align: center;
     }
     .leaderboard-entry-left {
  	grid-column: 2 / 3;
-	background: blue;
     }
     .leaderboard-entry-right {
  	grid-column: 4 / 5;
-	background: blue;
+    }
+    .leaderboard-entry {
+	display: grid;
+	grid-template-columns: 20% 1fr 30%;
+	grid-template-rows: 1fr;
+	overflow: hidden;
+	background: #69a3a2;
+    }
+    .lb_position {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100%;
+	min-height: 100%;
+	background: #a2c5c4;
+	font-weight: bold;
+	font-size: 60;
+ 	grid-column: 1 / 2;
+    }
+    .lb_text {
+	display: flex;
+	padding-left: 30px;
+	justify-content: left;
+	align-items: center;
+	height: 100%;
+	min-height: 100%;
+	font-size: 24;
+ 	grid-column: 2 / 3;
+	overflow: hidden;
+    }
+    .lb_img {
+ 	grid-column: 3 / 4;
+	overflow: hidden;
+	display: flex;
+	justify-content: center;
+	background: #909090;
+    }
+    .lb_img img {
+	max-width: 100%;
+	max-height: 100%;
     }
 
     #error {
@@ -91,75 +137,55 @@
     <div id="leaderboard">
 	<div id="lb_grid" class="leaderboard">
 		<div class="leaderboard-header">Leaderboard</div>
-		<div class="leaderboard-entry-left" id="lb_rank_1">
-			<div id="lb_position_rank_1">1</div>
-			<div id="lb_image_rank_1"><img id="lb_img_rank_1" src=""></div>
-			<div id="lb_title_rank_1"></div>
-			<div id="lb_artist_rank_1"></div>
-			<div id="lb_elo_rating_rank_1"></div>
+		<div class="leaderboard-entry leaderboard-entry-left" id="lb_rank_1">
+			<div class="lb_position" id="lb_position_rank_1">1</div>
+			<div class="lb_text" id="lb_text_rank_1"></div>
+			<div class="lb_img" id="lb_image_rank_1"><img id="lb_img_rank_1" src=""></div>
 		</div>
-		<div class="leaderboard-entry-right" id="lb_rank_2">
-			<div id="lb_position_rank_2">2</div>
-			<div id="lb_image_rank_2"><img id="lb_img_rank_2" src=""></div>
-			<div id="lb_title_rank_2"></div>
-			<div id="lb_artist_rank_2"></div>
-			<div id="lb_elo_rating_rank_2"></div>
+		<div class="leaderboard-entry leaderboard-entry-right" id="lb_rank_6">
+			<div class="lb_position" id="lb_position_rank_6">6</div>
+			<div class="lb_text" id="lb_text_rank_6"></div>
+			<div class="lb_img" id="lb_image_rank_6"><img id="lb_img_rank_6" src=""></div>
 		</div>
-		<div class="leaderboard-entry-left" id="lb_rank_3">
-			<div id="lb_position_rank_3">3</div>
-			<div id="lb_image_rank_3"><img id="lb_img_rank_3" src=""></div>
-			<div id="lb_title_rank_3"></div>
-			<div id="lb_artist_rank_3"></div>
-			<div id="lb_elo_rating_rank_3"></div>
+		<div class="leaderboard-entry leaderboard-entry-left" id="lb_rank_2">
+			<div class="lb_position" id="lb_position_rank_2">2</div>
+			<div class="lb_text" id="lb_text_rank_2"></div>
+			<div class="lb_img" id="lb_image_rank_2"><img id="lb_img_rank_2" src=""></div>
 		</div>
-		<div class="leaderboard-entry-right" id="lb_rank_4">
-			<div id="lb_position_rank_4">4</div>
-			<div id="lb_image_rank_4"><img id="lb_img_rank_4" src=""></div>
-			<div id="lb_title_rank_4"></div>
-			<div id="lb_artist_rank_4"></div>
-			<div id="lb_elo_rating_rank_4"></div>
+		<div class="leaderboard-entry leaderboard-entry-right" id="lb_rank_7">
+			<div class="lb_position" id="lb_position_rank_7">7</div>
+			<div class="lb_text" id="lb_text_rank_7"></div>
+			<div class="lb_img" id="lb_image_rank_7"><img id="lb_img_rank_7" src=""></div>
 		</div>
-		<div class="leaderboard-entry-left" id="lb_rank_5">
-			<div id="lb_position_rank_5">5</div>
-			<div id="lb_image_rank_5"><img id="lb_img_rank_5" src=""></div>
-			<div id="lb_title_rank_5"></div>
-			<div id="lb_artist_rank_5"></div>
-			<div id="lb_elo_rating_rank_5"></div>
+		<div class="leaderboard-entry leaderboard-entry-left" id="lb_rank_3">
+			<div class="lb_position" id="lb_position_rank_3">3</div>
+			<div class="lb_text" id="lb_text_rank_3"></div>
+			<div class="lb_img" id="lb_image_rank_3"><img id="lb_img_rank_3" src=""></div>
 		</div>
-		<div class="leaderboard-entry-right" id="lb_rank_6">
-			<div id="lb_position_rank_6">6</div>
-			<div id="lb_image_rank_6"><img id="lb_img_rank_6" src=""></div>
-			<div id="lb_title_rank_6"></div>
-			<div id="lb_artist_rank_6"></div>
-			<div id="lb_elo_rating_rank_6"></div>
+		<div class="leaderboard-entry leaderboard-entry-right" id="lb_rank_8">
+			<div class="lb_position" id="lb_position_rank_8">8</div>
+			<div class="lb_text" id="lb_text_rank_8"></div>
+			<div class="lb_img" id="lb_image_rank_8"><img id="lb_img_rank_8" src=""></div>
 		</div>
-		<div class="leaderboard-entry-left" id="lb_rank_7">
-			<div id="lb_position_rank_7">7</div>
-			<div id="lb_image_rank_7"><img id="lb_img_rank_7" src=""></div>
-			<div id="lb_title_rank_7"></div>
-			<div id="lb_artist_rank_7"></div>
-			<div id="lb_elo_rating_rank_7"></div>
+		<div class="leaderboard-entry leaderboard-entry-left" id="lb_rank_4">
+			<div class="lb_position" id="lb_position_rank_4">4</div>
+			<div class="lb_text" id="lb_text_rank_4"></div>
+			<div class="lb_img" id="lb_image_rank_4"><img id="lb_img_rank_4" src=""></div>
 		</div>
-		<div class="leaderboard-entry-right" id="lb_rank_8">
-			<div id="lb_position_rank_8">8</div>
-			<div id="lb_image_rank_8"><img id="lb_img_rank_8" src=""></div>
-			<div id="lb_title_rank_8"></div>
-			<div id="lb_artist_rank_8"></div>
-			<div id="lb_elo_rating_rank_8"></div>
+		<div class="leaderboard-entry leaderboard-entry-right" id="lb_rank_9">
+			<div class="lb_position" id="lb_position_rank_9">9</div>
+			<div class="lb_text" id="lb_text_rank_9"></div>
+			<div class="lb_img" id="lb_image_rank_9"><img id="lb_img_rank_9" src=""></div>
 		</div>
-		<div class="leaderboard-entry-left" id="lb_rank_9">
-			<div id="lb_position_rank_9">9</div>
-			<div id="lb_image_rank_9"><img id="lb_img_rank_9" src=""></div>
-			<div id="lb_title_rank_9"></div>
-			<div id="lb_artist_rank_9"></div>
-			<div id="lb_elo_rating_rank_9"></div>
+		<div class="leaderboard-entry leaderboard-entry-left" id="lb_rank_5">
+			<div class="lb_position" id="lb_position_rank_5">5</div>
+			<div class="lb_text" id="lb_text_rank_5"></div>
+			<div class="lb_img" id="lb_image_rank_5"><img id="lb_img_rank_5" src=""></div>
 		</div>
-		<div class="leaderboard-entry-right" id="lb_rank_10">
-			<div id="lb_position_rank_10">10</div>
-			<div id="lb_image_rank_10"><img id="lb_img_rank_10" src=""></div>
-			<div id="lb_title_rank_10"></div>
-			<div id="lb_artist_rank_10"></div>
-			<div id="lb_elo_rating_rank_10"></div>
+		<div class="leaderboard-entry leaderboard-entry-right" id="lb_rank_10">
+			<div class="lb_position" id="lb_position_rank_10">10</div>
+			<div class="lb_text" id="lb_text_rank_10"></div>
+			<div class="lb_img" id="lb_image_rank_10"><img id="lb_img_rank_10" src=""></div>
 		</div>
 	</div>
     </div>
@@ -184,27 +210,21 @@
       function updateLeaderboard(json) {
 	for (i = 0; i < 10; i++) {
 	  var lb_div = document.getElementById("lb_rank_" + (i+1));
-	  var lb_title = document.getElementById("lb_title_rank_" + (i+1));
-	  var lb_artist = document.getElementById("lb_artist_rank_" + (i+1));
-	  var lb_elo_rating = document.getElementById("lb_elo_rating_rank_" + (i+1));
+	  var lb_text = document.getElementById("lb_text_rank_" + (i+1));
 	  var lb_image = document.getElementById("lb_image_rank_" + (i+1));
 	  var lb_img = document.getElementById("lb_img_rank_" + (i+1));
-	  if (lb_title == null)
+	  if (lb_text == null)
 	    continue;
 	  if (i >= json.count) {
 		/* less than ten entries -> blanks */
 		lb_div.style.display = "none";
-		lb_title.innerText = "";
-		lb_artist.innerText = "";
+		lb_text.innerText = "";
 		lb_img.src = "";
-		lb_elo_rating.innerText = "";
 		continue;
           } else {
-	    lb_div.style.display = "block";
-	    lb_title.innerText = json.entries[i].title;
-	    lb_artist.innerText = json.entries[i].artist;
-	    lb_img.src = json.entries[i].filename;
-	    lb_elo_rating.innerText = json.entries[i].elo_rating;
+	    lb_div.style.display = "grid";
+	    lb_img.src = "/" + json.entries[i].filename;
+	    lb_text.innerHTML = `<div><b style="font-size: 24pt">${json.entries[i].title}</b><br>${json.entries[i].artist}<br>Elo Rating: ${json.entries[i].elo_rating}</div>`;
 	  }
 	}
       }
@@ -285,7 +305,7 @@
 		  updateLeaderboard(json);
 	          setTimeout(function() {
 		    displayScreen("leaderboard");
-		  }, 300);
+		  }, 1000);
 		} else if (msg_type == "ERROR") {
 		  updateErrorScreen(json);
 		  displayScreen("error");

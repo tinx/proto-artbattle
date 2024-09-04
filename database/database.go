@@ -109,7 +109,7 @@ func (r *MysqlRepository) GetArtworkWithLowestDuelCount() (*Artwork, error) {
 
 func (r *MysqlRepository) GetLeaderboard(maxcount int) ([]*Artwork, error) {
 	var lb []*Artwork
-	rows, err := r.db.Table("artworks").Order("elo_rating, id desc").Limit(maxcount).Rows()
+	rows, err := r.db.Table("artworks").Order("elo_rating desc, id asc").Limit(maxcount).Rows()
 	if err != nil {
 		return nil, err
 	}

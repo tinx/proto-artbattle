@@ -79,6 +79,12 @@ func main() {
 		http.ServeFile(w, r, "index.html")
 	})
 
+	http.HandleFunc("/images/", func(w http.ResponseWriter, r *http.Request) {
+		img := r.URL.Path
+		img = img[8:]
+		http.ServeFile(w, r, "images/" + img)
+	})
+
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		m.HandleRequest(w, r)
 	})
@@ -179,7 +185,7 @@ func main() {
 					continue
 				}
 				m.Broadcast([]byte("LEADERBOARD: " + json))
-				waitForSerialPort(sp, 5 * time.Second)
+				waitForSerialPort(sp, 15 * time.Second)
 				state = "SplashScreen"
 			case "SplashScreen":
 				m.Broadcast([]byte("SPLASH: "))
