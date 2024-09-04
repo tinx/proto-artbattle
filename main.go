@@ -46,6 +46,10 @@ type DecisionDTO struct {
 	BlueRankDiff	int64 `json:"blue_rank_diff"`
 }
 
+type ErrorDTO struct {
+	Message		string `json:"message"`
+}
+
 func main() {
 	err := LoadConfiguration()
 	if (err != nil) {
@@ -91,7 +95,7 @@ func main() {
 		s.Write([]byte("PONG: "))
 	})
 
-	serialPort, err := os.Open("/dev/pts/5")
+	serialPort, err := os.Open("/dev/pts/3")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "can't open serial port: %s\n", err)
 		os.Exit(1)
@@ -192,7 +196,14 @@ func main() {
 				waitForSerialPort(sp, 5 * time.Second)
 				state = "Duel"
 			case "Error":
-				m.Broadcast([]byte("ERROR: " + lastError))
+				var dto ErrorDTO
+				dto.Message = lastError
+				json, err := json.Marshal(&dto)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "error encoding error message: %s\n", lastError)
+					continue
+				}
+				m.Broadcast([]byte("ERROR: " + string(json)))
 				waitForSerialPort(sp, 30 * time.Second)
 				state = "Duel"
 			default:
@@ -282,6 +293,10 @@ func getDuelPartner(db *database.MysqlRepository, a *database.Artwork) (*databas
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error with contender list: %s\n", err)
 		return nil, err
+	}
+	if len(artworks) < 1 {
+		fmt.Fprintf(os.Stderr, "no contenders available\n", err)
+		return nil, fmt.Errorf("no contenders available")
 	}
 	/* version 1: just return a random element */
 	return artworks[rand.Intn(len(artworks))], nil

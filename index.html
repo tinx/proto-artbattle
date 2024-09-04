@@ -207,22 +207,30 @@
 	      }
 
 	      ws.onmessage = function(msg){
-		mparts = msg.data.split(/: /, 2)
-		if (typeof mparts[1] === 'undefined') return;
+		mparts = msg.data.split(/: /)
+		msg_type = mparts[0];
+		mparts.shift();
+		json_text = mparts.join(": ");
+		if (typeof json_text === 'undefined') return;
 		/* for some hellish javascript reason we have to run
 	   	   JSON.parse() twice. Once for normalizing the string and
 	   	   then again to get an object. This language is insane. */
 		var json;
-		if (mparts[1] != "") {
-		  j = JSON.parse(mparts[1]);
-		  if (typeof(j) == "object") {
-		    json = j;
-		  } else {
-		    json = JSON.parse(j);
+		if (json_text != "") {
+		  try {
+		    j = JSON.parse(json_text);
+		    if (typeof(j) == "object") {
+		      json = j;
+		    } else {
+		      json = JSON.parse(j);
+		    }
+		  } catch(e) {
+		    console.log("error parsing json: " + json_text)
+		    return;
 		  }
 		}
 		var el = document.getElementById("debug");
-		if (mparts[0] == "PONG") {
+		if (msg_type == "PONG") {
 		  // do nothing
 		} else if (mparts[0] == "DECISION") {
 		  displayScreen("decision");
@@ -231,11 +239,13 @@
 			"elo blue: " + json.blue.elo_rating + "\n" +
 			"elo diff red: " + json.red_elo_diff + "\n" +
 			"elo diff blue: " + json.blue_elo_diff + "\n"
-		} else if (mparts[0] == "LEADERBOARD") {
+		} else if (msg_type == "LEADERBOARD") {
 		  updateLeaderboard(json);
 	          setTimeout(function() {
 		    displayScreen("leaderboard");
 		  }, 300);
+		} else if (msg_type == "ERROR") {
+			console.log("server error: " + json.message)
 		} else {
 		  displayScreen("duel");
 		  el.innerText = "event: " + mparts[0]; // + "\n" + mparts[1];
