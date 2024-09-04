@@ -46,10 +46,47 @@
  	grid-column: 4 / 5;
 	background: blue;
     }
+
+    #error {
+	    display: none;
+    }
+    #error_screen {
+	text-align: center;
+	background: red;
+	width: 100%;
+	height: 100%;
+	min-height: 100%;
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr;
+	grid-template-rows: repeat(5, 1fr);
+    }
+    #error_title {
+ 	grid-column: 2 / 3;
+	grid-row: 2 / 3;
+	text-color: black;
+	font-weight: bold;
+	font-size: 36pt;
+	text-align: center;
+    }
+    #error_message {
+ 	grid-column: 2 / 3;
+	grid-row: 4 / 5;
+	text-color: black;
+	font-weight: bold;
+	font-size: 24pt;
+	text-align: center;
+    }
   </style>
 
   <body>
     <pre id="debug"></pre>
+
+    <div id="error">
+	    <div id="error_screen">
+		    <div id="error_title">Game Server Error</div>
+		    <div id="error_message"></div>
+	    </div>
+    </div>
 
     <div id="leaderboard">
 	<div id="lb_grid" class="leaderboard">
@@ -172,6 +209,11 @@
 	}
       }
 
+      function updateErrorScreen(json) {
+	var el = document.getElementById("error_message");
+	el.innerText = json.message;
+      }
+
       var ping_started = false;
       var ws;
 
@@ -245,7 +287,8 @@
 		    displayScreen("leaderboard");
 		  }, 300);
 		} else if (msg_type == "ERROR") {
-			console.log("server error: " + json.message)
+		  updateErrorScreen(json);
+		  displayScreen("error");
 		} else {
 		  displayScreen("duel");
 		  el.innerText = "event: " + mparts[0]; // + "\n" + mparts[1];
