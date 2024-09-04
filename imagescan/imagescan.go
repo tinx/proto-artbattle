@@ -3,13 +3,19 @@ package imagescan
 import (
 	"path/filepath"
 	"fmt"
-	"io/ioutil"
+	"encoding/json"
 	"os"
+	"os/exec"
+	"regexp"
 	"strings"
 
-	"github.com/dsoprea/go-exif"
 	"github.com/tinx/proto-artbattle/database"
 )
+
+type ExifData struct {
+	SourceFile	string	`json:"SourceFile"`
+	UserComment	string	`json:"UserComment"`
+}
 
 func Scan(root string) error {
 	err := filepath.Walk(root, ScanEntry)
@@ -30,80 +36,39 @@ func ScanEntry(path string, info os.FileInfo, err error) error {
 		return nil
 	}
 
-	f, err := os.Open(path)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "can't open file '%s' error: %s\n", path, err)
-		return nil // not err -> continue with next file
+	match, _ := regexp.MatchString("^.*\\.(jpg|JPG|jpeg|JPEG)$", path)
+	if !match {
+		return nil
 	}
-	defer f.Close()
-
-	data, err := ioutil.ReadAll(f)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "file read error: %s\n", err)
-		return nil // not err -> continue with next file
-	}
-
-	rawExif, err := exif.SearchAndExtractExif(data)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "find exif error: %s\n", err)
-		return nil // not err -> continue with next file
-	}
-
-	im := exif.NewIfdMappingWithStandard()
-	ti := exif.NewTagIndex()
-
-	visitor := func(fqIfdPath string, ifdIndex int, tagId uint16, tagType exif.TagType, valueContext exif.ValueContext) (error) {
-		ifdPath, err := im.StripPathPhraseIndices(fqIfdPath)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "strip path error: %s\n", err)
-			return nil // not err -> continue with next file
-		}
-		it, err := ti.Get(ifdPath, tagId)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "exif get error: %s\n", err)
-			return nil // not err -> continue with next file
-		}
-
-		if it.Name != "UserComment" {
-			return nil
-		}
-
-		valueString := ""
-		var value interface{}
-		if tagType.Type() == exif.TypeUndefined {
-			value, err = valueContext.Undefined()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "exif value context error: %s\n", err)
-				return nil // not err -> continue with next file
-			}
-			tmp, ok := value.(exif.TagUnknownType_9298_UserComment)
-			if !ok {
-				fmt.Fprintf(os.Stderr, "unexpected unknow type error, expected very specific unknown type 9298. error:  %s\n", err)
-				return nil // not err -> continue with next file
-			}
-			tmp2, _ := tmp.ValueBytes()
-			header := tmp2[:5]
-			if string(header) != "ASCII" {
-				fmt.Fprintf(os.Stderr, "unexpected header\n")
-				return nil // not err -> continue with next file
-			}
-			tmp2 = tmp2[8:] // cut off ASCII plus three null bytes
-			valueString = string(tmp2)
-		} else {
-			valueString, err = valueContext.FormatFirst()
-		}
-
-		parseExifUserComment(path, valueString)
-
+	match, _ = regexp.MatchString("^.*_tn\\.(jpg|JPG|jpeg|JPEG)$", path)
+	if match {
 		return nil
 	}
 
-	_, err = exif.Visit(exif.IfdStandard, im, ti, rawExif, visitor)
+	out, err := exec.Command("/usr/bin/exiftool", "-charset", "UTF8", "-j", "-usercomment", path).Output()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "warn: exif visitor error: %s\n", err)
+		fmt.Fprintf(os.Stderr, "error executing exiftool for %s: %s\n", path, err)
 		return nil // not err -> continue with next file
 	}
 
+	var exif []ExifData
+	err = json.Unmarshal(out, &exif)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error parsing exiftool output for %s: %s\n", path, err)
+		return nil // not err -> continue with next file
+	}
+	if len(exif) != 1 {
+		fmt.Fprintf(os.Stderr, "unexpected exif array length for %s: %d\n", path, len(exif))
+		return nil // not err -> continue with next file
+	}
+
+	usercomment := exif[0].UserComment
+	if usercomment == "" {
+		fmt.Fprintf(os.Stderr, "missing exif UserComment for %s: %s\n", path)
+		return nil // not err -> continue with next file
+	}
+
+	parseExifUserComment(path, usercomment)
 	return nil
 }
 
