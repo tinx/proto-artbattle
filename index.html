@@ -348,6 +348,24 @@
 	t2.innerHTML = `<div><b style="font-size: 24pt">${json.blue.title}</b><br>${json.blue.artist}<br>Elo Rating: ${json.blue.elo_rating}</div>`;
       }
 
+      function updateTimeoutScreen(json) {
+	resetDuelScreenCSS();
+	var el = document.getElementById("duel_title");
+        el.innerText = "Timeout";
+	var img1 = document.getElementById("duel_img_1");
+	img1.src = "/" + json.red.filename;
+	img1.style.filter = "saturate(0%)";
+	img1.style.opacity = "0.4";
+	var img2 = document.getElementById("duel_img_2");
+	img2.src = "/" + json.blue.filename;
+	img2.style.filter = "saturate(0%)";
+	img2.style.opacity = "0.4";
+	var t1 = document.getElementById("duel_text_1");
+	var t2 = document.getElementById("duel_text_2");
+	t1.innerHTML = `<div class=\"duel-winner\"">Timeout</div>`;
+	t2.innerHTML = `<div class=\"duel-winner\"">Timeout</div>`;
+      }
+
       function updateDecisionScreen(json) {
 	resetDuelScreenCSS();
 	var el = document.getElementById("duel_title");
@@ -455,21 +473,18 @@
 		var el = document.getElementById("debug");
 		if (msg_type == "PONG") {
 		  // do nothing
+		} else if (msg_type == "TIMEOUT") {
+		  updateTimeoutScreen(json);
+		  displayScreen("duel");
 		} else if (msg_type == "DECISION") {
 		  updateDecisionScreen(json);
-	          setTimeout(function() {
-		    displayScreen("duel");
-		  }, 1000);
+		  displayScreen("duel");
 		} else if (msg_type == "DUEL") {
 		  updateDuelScreen(json);
-	          setTimeout(function() {
-		    displayScreen("duel");
-		  }, 1000);
+		  displayScreen("duel");
 		} else if (msg_type == "LEADERBOARD") {
 		  updateLeaderboard(json);
-	          setTimeout(function() {
-		    displayScreen("leaderboard");
-		  }, 1000);
+		  displayScreen("leaderboard");
 		} else if (msg_type == "ERROR") {
 		  updateErrorScreen(json);
 		  displayScreen("error");
