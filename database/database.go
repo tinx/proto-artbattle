@@ -190,3 +190,11 @@ func GetArtworkRank(db *gorm.DB, a *Artwork) (int64, error) {
  	db.Model(&Artwork{}).Where("elo_rating > ?", a.EloRating).Count(&count)
 	return count + 1, nil
 }
+
+func (r *MysqlRepository) GetTotalDuelCount() (int64, error) {
+	var count int64
+ 	r.db.Table("artworks").Select("sum(duel_count)").Row().Scan(&count)
+	/* the total number of duels is half the sum of all duel_counts because a duel
+	   has two participants. (hence the name) */
+	return count / 2, nil
+}

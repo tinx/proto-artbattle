@@ -17,6 +17,55 @@
       display: none;
     }
 
+    #splash {
+	text-align: left;
+	width: 100%;
+	min-height: 100%;
+	display: none;
+	background: #005953;
+    }
+    #splash_screen {
+	width: 100%;
+	height: 100%;
+	min-height: 100%;
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr;
+	grid-template-rows: 10% 1fr 10% 1fr 10% 1fr 10%;
+    }
+    #splash_title {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+ 	grid-column: 1 / 4;
+	grid-row: 2 / 3;
+	color: white;
+	font-weight: bold;
+	font-size: 60;
+	text-align: center;
+	overflow: hidden;
+    }
+    #splash_text {
+ 	grid-column: 2 / 3;
+	grid-row: 4 / 5;
+	/*
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	*/
+	vertical-align: top;
+	font-size: 24;
+	color: white;
+    }
+    #splash_stats {
+ 	grid-column: 2 / 3;
+	grid-row: 6 / 7;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 24;
+	color: white;
+    }
+
     #duel {
 	text-align: left;
 	width: 100%;
@@ -212,6 +261,21 @@
 	    <div id="error_screen">
 		    <div id="error_title">Game Server Error</div>
 		    <div id="error_message"></div>
+	    </div>
+    </div>
+
+    <div id="splash">
+	    <div id="splash_screen">
+		    <div id="splash_title">Art Battle</div>
+		    <div id="splash_text">
+			    <p><b>Two go in, one comes out.</b> Here, we pit two pieces of artwork
+			    against each other, and you get to decide which one comes out on top.</p>
+
+			    <p>Press the red and blue buttons to vote.</p>
+
+			    <p>Stop pressing buttons to see the leaderboard.</p>
+		    </div>
+		    <div id="splash_stats"></div>
 	    </div>
     </div>
 
@@ -413,6 +477,11 @@
 	el_loser_img.style.opacity = "0.4";
       }
 
+      function updateSplashScreen(json) {
+	var el = document.getElementById("splash_stats");
+        el.innerText = json.duel_count + " duels have been played in total."
+      }
+
       var ping_started = false;
       var ws;
 
@@ -473,6 +542,9 @@
 		var el = document.getElementById("debug");
 		if (msg_type == "PONG") {
 		  // do nothing
+		} else if (msg_type == "SPLASH") {
+		  updateSplashScreen(json);
+		  displayScreen("splash");
 		} else if (msg_type == "TIMEOUT") {
 		  updateTimeoutScreen(json);
 		  displayScreen("duel");

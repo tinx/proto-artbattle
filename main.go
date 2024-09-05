@@ -50,6 +50,10 @@ type ErrorDTO struct {
 	Message		string `json:"message"`
 }
 
+type SplashscreenDTO struct {
+	DuelCount	int64 `json:"duel_count"`
+}
+
 func main() {
 	err := LoadConfiguration()
 	if (err != nil) {
@@ -101,7 +105,7 @@ func main() {
 		s.Write([]byte("PONG: "))
 	})
 
-	serialPort, err := os.Open("/dev/pts/3")
+	serialPort, err := os.Open("/dev/pts/5")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "can't open serial port: %s\n", err)
 		os.Exit(1)
@@ -188,7 +192,13 @@ func main() {
 				waitForSerialPort(sp, 15 * time.Second)
 				state = "SplashScreen"
 			case "SplashScreen":
-				m.Broadcast([]byte("SPLASH: "))
+				json, err := getSplashScreen(db)
+				if err != nil {
+					state = "Error"
+					lastError = fmt.Sprintf("Splash screen error: %s", err)
+					continue
+				}
+				m.Broadcast([]byte("SPLASH: " + json))
 				waitForSerialPort(sp, 5 * time.Second)
 				state = "Duel"
 			case "Decision":
@@ -357,6 +367,22 @@ func encodeLeaderboardToDTO(lb []*database.Artwork) (string, error) {
 		encodeArtworkToDTO(a, &aw_dto)
 		dto.Entries = append(dto.Entries, aw_dto)
 	}
+	j, err := json.Marshal(dto)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "json marhsal error: %s\n", err)
+		return "", err
+	}
+	return string(j), nil
+}
+
+func getSplashScreen(db *database.MysqlRepository) (string, error) {
+	var dto SplashscreenDTO;
+	count, err := db.GetTotalDuelCount()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error getting total duel count: %s\n", err)
+		return "", err
+	}
+	dto.DuelCount = count
 	j, err := json.Marshal(dto)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "json marhsal error: %s\n", err)
