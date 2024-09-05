@@ -17,6 +17,15 @@
       display: none;
     }
 
+    .dot {
+	    height: 60px;
+	    width: 60px;
+	    border-radius: 50%;
+	    border: 3px solid black;
+	    display: inline-block;
+	    margin-right: 30px;
+    }
+
     #splash {
 	text-align: left;
 	width: 100%;
@@ -379,7 +388,7 @@
           } else {
 	    lb_div.style.display = "grid";
 	    lb_img.src = "/" + json.entries[i].filename;
-	    lb_text.innerHTML = `<div><b style="font-size: 24pt">${json.entries[i].title}</b><br>${json.entries[i].artist}<br>Elo Rating: ${json.entries[i].elo_rating}</div>`;
+	    lb_text.innerHTML = `<div><b style="font-size: 24pt">${json.entries[i].title}</b><br>${json.entries[i].artist}<br>Art Show Panel: ${json.entries[i].panel}</div>`;
 	  }
 	}
       }
@@ -398,6 +407,11 @@
 	img2.style.filter = "saturate(100%)";
       }
 
+      function buttonPress(button) {
+	var j = JSON.stringify({"button": button});
+	ws.send("BUTTON: "+j);
+      }
+
       function updateDuelScreen(json) {
 	resetDuelScreenCSS();
 	var el = document.getElementById("duel_title");
@@ -407,9 +421,13 @@
 	var img2 = document.getElementById("duel_img_2");
 	img2.src = "/" + json.blue.filename;
 	var t1 = document.getElementById("duel_text_1");
-	t1.innerHTML = `<div><b style="font-size: 24pt">${json.red.title}</b><br>${json.red.artist}<br>Elo Rating: ${json.red.elo_rating}</div>`;
+	t1.innerHTML = `<span class=\"dot\" id=\"red_dot\" style=\"background: red\"></span><div><b style="font-size: 24pt">${json.red.title}</b><br>${json.red.artist}<br>Elo Rating: ${json.red.elo_rating}</div>`;
 	var t2 = document.getElementById("duel_text_2");
-	t2.innerHTML = `<div><b style="font-size: 24pt">${json.blue.title}</b><br>${json.blue.artist}<br>Elo Rating: ${json.blue.elo_rating}</div>`;
+	t2.innerHTML = `<span class=\"dot\" id=\"blue_dot\" style=\"background: blue\"></span><div><b style="font-size: 24pt">${json.blue.title}</b><br>${json.blue.artist}<br>Elo Rating: ${json.blue.elo_rating}</div>`;
+	var rd = document.getElementById("red_dot");
+	rd.onclick = function () { buttonPress("r"); };
+	var bd = document.getElementById("blue_dot");
+	bd.onclick = function () { buttonPress("b"); };
       }
 
       function updateTimeoutScreen(json) {

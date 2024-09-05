@@ -54,6 +54,10 @@ type SplashscreenDTO struct {
 	DuelCount	int64 `json:"duel_count"`
 }
 
+type ButtonDTO struct {
+	Button		string `json:"button"`
+}
+
 func main() {
 	err := LoadConfiguration()
 	if (err != nil) {
@@ -101,10 +105,6 @@ func main() {
 		 */
 	})
 
-	m.HandleMessage(func(s *melody.Session, msg []byte) {
-		s.Write([]byte("PONG: "))
-	})
-
 	serialPort, err := os.Open("/dev/pts/5")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "can't open serial port: %s\n", err)
@@ -130,6 +130,24 @@ func main() {
 			}
 		}
 	}()
+
+	m.HandleMessage(func(s *melody.Session, msg []byte) {
+		txt := string(msg);
+		if len(txt) > 8 && txt[:8] == "BUTTON: " {
+			var dto ButtonDTO;
+			err := json.Unmarshal(msg[8:], &dto)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "error unmarshalling button dto: %s\n", err)
+				return
+			}
+			if dto.Button != "b" && dto.Button != "r" {
+				fmt.Fprintf(os.Stderr, "unexpected button: %s\n", dto.Button)
+				return
+			}
+			sp <- []byte(dto.Button)
+		}
+		s.Write([]byte("PONG: "))
+	})
 
 	go func() {
 		/* Finite State Machine
