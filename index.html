@@ -36,7 +36,7 @@
 	display: flex;
 	justify-content: center;
 	align-items: center;
- 	grid-column: 1 / 5;
+ 	grid-column: 1 / 6;
 	grid-row: 1 / 2;
 	color: white;
 	font-weight: bold;
@@ -58,8 +58,9 @@
 	justify-content: center;
     }
     .duel-images img {
-	max-width: 100%;
-	max-height: 100%;
+	width: 100%;
+	height: auto;
+	object-fit: contain;
     }
     #duel_text_1 {
  	grid-column: 2 / 3;
@@ -76,6 +77,26 @@
 	justify-content: center;
 	align-items: center;
 	color: white;
+    }
+
+    .duel-winner {
+	font-size: 30;
+	font-weight: bold;
+	background: red;
+	position: relative;
+	top: -50px;
+	padding: 20px 100px 20px 100px;
+    }
+    .duel-winner pre {
+	font-size: 30;
+    }
+    .duel-loser {
+	font-size: 30;
+	font-weight: bold;
+	opacity: 0.4;
+    }
+    .duel-winner pre {
+	font-size: 30;
     }
 
     #leaderboard {
@@ -99,7 +120,7 @@
 	display: flex;
 	justify-content: center;
 	align-items: center;
- 	grid-column: 1 / 5;
+ 	grid-column: 1 / 6;
 	grid-row: 1 / 2;
 	color: white;
 	font-weight: bold;
@@ -304,7 +325,17 @@
 	el.innerText = json.message;
       }
 
+      function resetDuelScreenCSS() {
+	var img1 = document.getElementById("duel_img_1");
+	img1.style.opacity = "1";
+	img1.style.filter = "saturate(100%)";
+	var img2 = document.getElementById("duel_img_2");
+	img2.style.opacity = "1";
+	img2.style.filter = "saturate(100%)";
+      }
+
       function updateDuelScreen(json) {
+	resetDuelScreenCSS();
 	var el = document.getElementById("duel_title");
         el.innerText = json.red.title + " vs. " + json.blue.title;
 	var img1 = document.getElementById("duel_img_1");
@@ -315,6 +346,53 @@
 	t1.innerHTML = `<div><b style="font-size: 24pt">${json.red.title}</b><br>${json.red.artist}<br>Elo Rating: ${json.red.elo_rating}</div>`;
 	var t2 = document.getElementById("duel_text_2");
 	t2.innerHTML = `<div><b style="font-size: 24pt">${json.blue.title}</b><br>${json.blue.artist}<br>Elo Rating: ${json.blue.elo_rating}</div>`;
+      }
+
+      function updateDecisionScreen(json) {
+	resetDuelScreenCSS();
+	var el = document.getElementById("duel_title");
+        el.innerText = json.red.title + " vs. " + json.blue.title;
+	var img1 = document.getElementById("duel_img_1");
+	img1.src = "/" + json.red.filename;
+	var img2 = document.getElementById("duel_img_2");
+	img2.src = "/" + json.blue.filename;
+	var t1 = document.getElementById("duel_text_1");
+	var t2 = document.getElementById("duel_text_2");
+
+	var winner;
+	var el_winner_text;
+	var el_winner_img;
+	var el_loser_text;
+	var el_loser_img;
+	var winner_elo_diff;
+	var loser_elo_diff;
+	var winner_rank_diff;
+	var loser_rank_diff;
+	if (json.winner == "red") {
+	  winner = json.red;
+          el_winner_text = t1;
+	  el_loser_text = t2;
+	  el_winner_img = img1;
+	  el_loser_img = img2;
+	  winner_elo_diff = json.red_elo_diff;
+	  winner_rank_diff = json.red_elo_diff;
+	  loser_elo_diff = json.blue_elo_diff;
+	  loser_rank_diff = json.blue_elo_diff;
+	} else {
+	  winner = json.blue;
+          el_winner_text = t2;
+	  el_loser_text = t1;
+	  el_winner_img = img2;
+	  el_loser_img = img1;
+	  winner_elo_diff = json.blue_elo_diff;
+	  winner_rank_diff = json.blue_elo_diff;
+	  loser_elo_diff = json.red_elo_diff;
+	  loser_rank_diff = json.red_elo_diff;
+	}
+	el_winner_text.innerHTML = `<div class=\"duel-winner\"">Winner!<pre>${winner_elo_diff} Elo Rating Points</pre></div>`;
+        el_loser_text.innerHTML = `<div class=\"duel-loser\"">Loser<pre>${loser_elo_diff} Elo Rating Points</pre></div>`;
+	el_loser_img.style.filter = "saturate(0%)";
+	el_loser_img.style.opacity = "0.4";
       }
 
       var ping_started = false;
@@ -377,13 +455,11 @@
 		var el = document.getElementById("debug");
 		if (msg_type == "PONG") {
 		  // do nothing
-		} else if (mparts[0] == "DECISION") {
-		  displayScreen("decision");
-		  el.innerText = "Decision\nWinner:" + json.winner + "\n" +
-			"elo red: " + json.red.elo_rating + "\n" +
-			"elo blue: " + json.blue.elo_rating + "\n" +
-			"elo diff red: " + json.red_elo_diff + "\n" +
-			"elo diff blue: " + json.blue_elo_diff + "\n"
+		} else if (msg_type == "DECISION") {
+		  updateDecisionScreen(json);
+	          setTimeout(function() {
+		    displayScreen("duel");
+		  }, 1000);
 		} else if (msg_type == "DUEL") {
 		  updateDuelScreen(json);
 	          setTimeout(function() {
