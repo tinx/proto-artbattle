@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+	"time"
 
 	"gorm.io/gorm"
 	"gorm.io/driver/mysql"
@@ -15,6 +16,14 @@ type Artwork struct {
 	Filename	string	`gorm:"type:varchar(120); NOT NULL"`
 	DuelCount	uint64	`gorm:"index:idx_duel_count"`
 	EloRating	int16	`gorm:"index:idx_elo_rating"`
+}
+
+type Duel struct {
+	gorm.Model
+	Duelist1	uint		`gorm:"type:bigint; NOT NULL"`
+	Duelist2	uint		`gorm:"type:bigint; NOT NULL"`
+	Winner		uint		`gorm:"type:bigint; NOT NULL"`
+	When		time.Time	`gorm:"NOT NULL"`
 }
 
 type MysqlRepository struct {
@@ -50,6 +59,7 @@ func (r *MysqlRepository) Close() {
 func (r *MysqlRepository) Migrate() error {
 	err := r.db.AutoMigrate(
 		&Artwork{},
+		&Duel{},
 	)
 	if err != nil {
 		return err
@@ -198,3 +208,12 @@ func (r *MysqlRepository) GetTotalDuelCount() (int64, error) {
 	   has two participants. (hence the name) */
 	return count / 2, nil
 }
+
+func AddDuel(db *gorm.DB, d *Duel) error {
+	err := db.Create(d).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+

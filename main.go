@@ -416,13 +416,19 @@ func processDecision(db *database.MysqlRepository, a1 *database.Artwork, a2 *dat
 		a1_rank_old, err := database.GetArtworkRank(tx, a1)
 		a2_rank_old, err := database.GetArtworkRank(tx, a2)
 		var a1ed, a2ed int16
+		var duel database.Duel;
+		duel.Duelist1 = a1.ID
+		duel.Duelist2 = a2.ID
+		duel.When = time.Now()
 		/* Adjust depending on decision */
 		if decision == 'r' {
 			a1ed, a2ed = eloRatingAdjustments(a1.EloRating, a2.EloRating)
 			winner = "red"
+			duel.Winner = a1.ID
 		} else if decision == 'b' {
 			a2ed, a1ed = eloRatingAdjustments(a2.EloRating, a1.EloRating)
 			winner = "blue"
+			duel.Winner = a2.ID
 		} else {
 			return fmt.Errorf("unexpected decision: %c\n", decision)
 		}
@@ -449,6 +455,11 @@ func processDecision(db *database.MysqlRepository, a1 *database.Artwork, a2 *dat
 		dto.RedRankDiff = a1_rank_old - a1_rank_new
 		dto.BlueRankDiff = a2_rank_old - a2_rank_new
 		dto.Winner = winner
+
+		err = database.AddDuel(tx, &duel)
+		if err != nil {
+			return fmt.Errorf("error logging duel: %s\n", err)
+		}
 		return nil
 	}
 	err := db.Transaction(process_decision)
