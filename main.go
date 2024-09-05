@@ -165,7 +165,7 @@ func main() {
 					continue
 				}
 				m.Broadcast([]byte("DUEL: " + json))
-				input = waitForSerialPort(sp, 10 * time.Second)
+				input = waitForSerialPort(sp, 15 * time.Second)
 				if input == "" {
 					state = "Timeout"
 				} else {
@@ -179,7 +179,7 @@ func main() {
 					continue
 				}
 				m.Broadcast([]byte("TIMEOUT: " + json))
-				waitForSerialPort(sp, 3 * time.Second)
+				waitForSerialPort(sp, 2 * time.Second)
 				state = "Leaderboard"
 			case "Leaderboard":
 				json, err := getLeaderboard(db)
@@ -199,7 +199,7 @@ func main() {
 					continue
 				}
 				m.Broadcast([]byte("SPLASH: " + json))
-				waitForSerialPort(sp, 5 * time.Second)
+				waitForSerialPort(sp, 15 * time.Second)
 				state = "Duel"
 			case "Decision":
 				json, err := processDecision(db, a1, a2, input[0])
@@ -209,7 +209,7 @@ func main() {
 					continue
 				}
 				m.Broadcast([]byte("DECISION: " + json))
-				waitForSerialPort(sp, 5 * time.Second)
+				waitForSerialPort(sp, 2 * time.Second)
 				state = "Duel"
 			case "Error":
 				var dto ErrorDTO
