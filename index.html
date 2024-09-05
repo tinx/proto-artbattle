@@ -56,11 +56,7 @@
     #splash_text {
  	grid-column: 2 / 3;
 	grid-row: 4 / 5;
-	/*
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	*/
+	text-align: center;
 	vertical-align: top;
 	font-size: 24;
 	color: white;
@@ -278,7 +274,7 @@
 		    <div id="splash_title">Art Battle</div>
 		    <div id="splash_text">
 			    <p><b>Two go in, one comes out.</b> Here, we pit two pieces of artwork
-			    against each other, and you get to decide which one comes out on top.</p>
+			    against each other, and you get to decide which one wins.</p>
 
 			    <p>Press the red and blue buttons to vote.</p>
 
@@ -421,9 +417,9 @@
 	var img2 = document.getElementById("duel_img_2");
 	img2.src = "/" + json.blue.filename;
 	var t1 = document.getElementById("duel_text_1");
-	t1.innerHTML = `<span class=\"dot\" id=\"red_dot\" style=\"background: red\"></span><div><b style="font-size: 24pt">${json.red.title}</b><br>${json.red.artist}<br>Elo Rating: ${json.red.elo_rating}</div>`;
+	t1.innerHTML = `<span class=\"dot\" id=\"red_dot\" style=\"background: red\"></span><div><b style="font-size: 24pt">${json.red.title}</b><br><b>${json.red.artist}</b><br>Elo Rating: ${json.red.elo_rating}<br>Art Show Panel: ${json.blue.panel}</div>`;
 	var t2 = document.getElementById("duel_text_2");
-	t2.innerHTML = `<span class=\"dot\" id=\"blue_dot\" style=\"background: blue\"></span><div><b style="font-size: 24pt">${json.blue.title}</b><br>${json.blue.artist}<br>Elo Rating: ${json.blue.elo_rating}</div>`;
+	t2.innerHTML = `<span class=\"dot\" id=\"blue_dot\" style=\"background: blue\"></span><div><b style="font-size: 24pt">${json.blue.title}</b><br><b>${json.blue.artist}</b><br>Elo Rating: ${json.blue.elo_rating}<br>Art Show Panel: ${json.blue.panel}</div>`;
 	var rd = document.getElementById("red_dot");
 	rd.onclick = function () { buttonPress("r"); };
 	var bd = document.getElementById("blue_dot");
