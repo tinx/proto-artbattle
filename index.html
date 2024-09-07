@@ -208,13 +208,16 @@
     .lb_text {
 	display: flex;
 	padding-left: 30px;
+	padding-right: 30px;
 	justify-content: left;
 	align-items: center;
 	height: 100%;
 	min-height: 100%;
-	font-size: 24;
+	/* font-size: 24; */
  	grid-column: 2 / 3;
 	overflow: hidden;
+	font-size: calc((1vw + 1vh) * 10 / 13);
+	text-overflow: ellipsis;
     }
     .lb_img {
  	grid-column: 3 / 4;
@@ -384,7 +387,9 @@
           } else {
 	    lb_div.style.display = "grid";
 	    lb_img.src = "/" + json.entries[i].filename;
-	    lb_text.innerHTML = `<div><b style="font-size: 24pt">${json.entries[i].title}</b><br>${json.entries[i].artist}<br>Art Show Panel: ${json.entries[i].panel}</div>`;
+	    json.entries[i].title = json.entries[i].title.replace(/ /g, '&nbsp;');
+	    json.entries[i].artist = json.entries[i].artist.replace(/ /g, '&nbsp;');
+	    lb_text.innerHTML = `<div><b>${json.entries[i].title}</b><br>${json.entries[i].artist}<br>Art Show Panel: ${json.entries[i].panel}</div>`;
 	  }
 	}
       }
