@@ -414,7 +414,13 @@ func processDecision(db *database.MysqlRepository, a1 *database.Artwork, a2 *dat
 	var winner string
 	process_decision := func(tx *gorm.DB) error {
 		a1_rank_old, err := database.GetArtworkRank(tx, a1)
+		if err != nil {
+			return nil
+		}
 		a2_rank_old, err := database.GetArtworkRank(tx, a2)
+		if err != nil {
+			return nil
+		}
 		var a1ed, a2ed int16
 		var duel database.Duel;
 		duel.Duelist1 = a1.ID
@@ -450,7 +456,13 @@ func processDecision(db *database.MysqlRepository, a1 *database.Artwork, a2 *dat
 			return fmt.Errorf("error updating artwork: %s\n", err)
 		}
 		a1_rank_new, err := database.GetArtworkRank(tx, a1)
+		if err != nil {
+			return nil
+		}
 		a2_rank_new, err := database.GetArtworkRank(tx, a2)
+		if err != nil {
+			return nil
+		}
 
 		dto.RedRankDiff = a1_rank_old - a1_rank_new
 		dto.BlueRankDiff = a2_rank_old - a2_rank_new
