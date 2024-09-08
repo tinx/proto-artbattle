@@ -8,6 +8,8 @@ require (
 )
 
 require (
+	github.com/StephanHCB/go-autumn-logging v0.4.0 // indirect
+	github.com/StephanHCB/go-autumn-logging-zerolog v0.6.0 // indirect
 	github.com/dsoprea/go-exif v0.0.0-20230826092837-6579e82b732d // indirect
 	github.com/dsoprea/go-exif/v2 v2.0.0-20200604193436-ca8584a0e1c4 // indirect
 	github.com/dsoprea/go-iptc v0.0.0-20200609062250-162ae6b44feb // indirect
@@ -23,11 +25,15 @@ require (
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/rs/zerolog v1.33.0 // indirect
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd // indirect
 	golang.org/x/net v0.0.0-20200520182314-0ba52f642ac2 // indirect
-	golang.org/x/sys v0.5.0 // indirect
+	golang.org/x/sys v0.12.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/mysql v1.5.7 // indirect
 	gorm.io/gorm v1.25.11 // indirect
 )

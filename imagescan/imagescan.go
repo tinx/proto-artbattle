@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/tinx/proto-artbattle/database"
+	"github.com/tinx/proto-artbattle/internal/repository/config"
 )
 
 type ExifData struct {
@@ -138,7 +139,7 @@ func updateArtworkRecord(path string, artist string, title string, panel string)
 		Artist: artist,
 		Panel: panel,
 		Filename: path,
-		EloRating: 800,
+		EloRating: int16(config.RatingDefaultPoints()),
 		DuelCount: 0,
 	}
 	err = db.AddArtwork(a)

@@ -13,6 +13,9 @@ import (
 	"github.com/olahol/melody"
 	"github.com/tinx/proto-artbattle/database"
 	"github.com/tinx/proto-artbattle/imagescan"
+	"github.com/tinx/proto-artbattle/internal/repository/config"
+	aulogging "github.com/StephanHCB/go-autumn-logging"
+	auzerolog "github.com/StephanHCB/go-autumn-logging-zerolog"
 	"gorm.io/gorm"
 )
 
@@ -59,14 +62,18 @@ type ButtonDTO struct {
 }
 
 func main() {
-	err := LoadConfiguration()
+	config.ParseCommingLineFlags()
+	aulogging.DefaultRequestIdValue = "00000000"
+	auzerolog.SetupPlaintextLogging()
+
+	err := config.StartupLoadConfiguration()
 	if (err != nil) {
 		fmt.Fprintf(os.Stderr, "error reading configuration: %v\n", err)
 		os.Exit(1)
 	}
 
 	db := database.Create()
-	err = db.Open(Config.DB)
+	err = db.Open(config.DatabaseConnectString())
 	if (err != nil) {
 		fmt.Fprintf(os.Stderr, "error opening database: %v\n", err)
 		os.Exit(1)
@@ -78,7 +85,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	imagescan.Scan(Config.ImagePath)
+	imagescan.Scan(config.ImagePath())
 
 	m := melody.New()
 	// w, _ := fsnotify.NewWatcher()
@@ -90,7 +97,7 @@ func main() {
 	http.HandleFunc("/images/", func(w http.ResponseWriter, r *http.Request) {
 		img := r.URL.Path
 		img = img[8:]
-		http.ServeFile(w, r, "images/" + img)
+		http.ServeFile(w, r, config.ImagePath() + img)
 	})
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
@@ -105,7 +112,7 @@ func main() {
 		 */
 	})
 
-	serialPort, err := os.Open("/dev/pts/5")
+	serialPort, err := os.Open(config.SerialPortDeviceFile())
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "can't open serial port: %s\n", err)
 		os.Exit(1)
@@ -183,7 +190,7 @@ func main() {
 					continue
 				}
 				m.Broadcast([]byte("DUEL: " + json))
-				input = waitForSerialPort(sp, 15 * time.Second)
+				input = waitForSerialPort(sp, config.TimingsDuelTimeout() * time.Second)
 				if input == "" {
 					state = "Timeout"
 				} else {
@@ -207,7 +214,7 @@ func main() {
 					continue
 				}
 				m.Broadcast([]byte("LEADERBOARD: " + json))
-				waitForSerialPort(sp, 15 * time.Second)
+				waitForSerialPort(sp, config.TimingsLeaderboard() * time.Second)
 				state = "SplashScreen"
 			case "SplashScreen":
 				json, err := getSplashScreen(db)
@@ -217,7 +224,7 @@ func main() {
 					continue
 				}
 				m.Broadcast([]byte("SPLASH: " + json))
-				waitForSerialPort(sp, 15 * time.Second)
+				waitForSerialPort(sp, config.TimingsSplashScreen() * time.Second)
 				state = "Duel"
 			case "Decision":
 				json, err := processDecision(db, a1, a2, input[0])
@@ -246,46 +253,7 @@ func main() {
 		}
 	}()
 
-	// w.Add(file)
-
-	http.ListenAndServe(fmt.Sprintf(":%d", Config.Port), nil)
-}
-
-
-func fill_db(db *database.MysqlRepository) {
-	a, err := db.GetArtworkById(1);
-	/*
-	a := &database.Artwork{
-		Title: "Work 1",
-		Artist: "Artist 1",
-		EloRating: 800,
-		DuelCount: 2,
-	}
-	db.AddArtwork(a)
-	*/
-	rank, err := db.GetArtworkRank(a)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error getting artwork rank: %s\n", err)
-		os.Exit(1)
-	}
-	fmt.Printf("rank: %d\n", rank)
-	/*
-	res, err := db.GetArtworksWithSimilarEloRating(a, 2)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error getting artwork rank: %s\n", err)
-		os.Exit(1)
-	}
-	for _, val := range res {
-		fmt.Printf("Title: %s\n", val.Title)
-	}
-	*/
-	res, err := db.GetArtworkWithLowestDuelCount();
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error getting artwork rank: %s\n", err)
-		os.Exit(1)
-	}
-	fmt.Printf("Title: %s\n", res.Title)
-
+	http.ListenAndServe(config.ServerAddress(), nil)
 }
 
 func waitForSerialPort(c chan []byte, timeout time.Duration) string {
@@ -499,7 +467,7 @@ func eloRatingAdjustments(elo_winner, elo_loser int16) (int16, int16) {
 	/* The K-factor is fixed to 16 for simplicity reasons, but it could
 	   depend on the elo ranking of the winner/loser. See Wikipedia
 	   on the Elo rating system and k-factor. */
-	var k_factor = 16.0
+	var k_factor = config.RatingKFactor()
 
 	elo_w := float64(elo_winner)
 	elo_l := float64(elo_loser)

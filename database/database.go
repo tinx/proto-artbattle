@@ -191,19 +191,19 @@ func UpdateArtwork(db *gorm.DB, a *Artwork) error {
 
 func (r *MysqlRepository) GetArtworkRank(a *Artwork) (int64, error) {
 	var count int64
- 	r.db.Model(&Artwork{}).Where("elo_rating > ?", a.EloRating).Count(&count)
+	r.db.Model(&Artwork{}).Where("elo_rating > ?", a.EloRating).Count(&count)
 	return count + 1, nil
 }
 
 func GetArtworkRank(db *gorm.DB, a *Artwork) (int64, error) {
 	var count int64
- 	db.Model(&Artwork{}).Where("elo_rating > ?", a.EloRating).Count(&count)
+	db.Model(&Artwork{}).Where("elo_rating > ?", a.EloRating).Count(&count)
 	return count + 1, nil
 }
 
 func (r *MysqlRepository) GetTotalDuelCount() (int64, error) {
 	var count int64
- 	r.db.Table("artworks").Select("sum(duel_count)").Row().Scan(&count)
+	r.db.Table("artworks").Select("sum(duel_count)").Row().Scan(&count)
 	/* the total number of duels is half the sum of all duel_counts because a duel
 	   has two participants. (hence the name) */
 	return count / 2, nil
