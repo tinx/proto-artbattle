@@ -474,9 +474,6 @@ func eloRatingAdjustments(elo_winner, elo_loser int16) (int16, int16) {
 
 	expected_score_loser  := 1.0 / (1.0 + math.Pow(10, float64((elo_l - elo_w)/400.0)))
 	elo_diff_loser := k_factor * (1.0 - expected_score_loser)
-	if elo_diff_loser <= 1.0 {
-		elo_diff_loser = 1.0
-	}
 
 	return int16(math.Round(elo_diff_loser)), int16(math.Round(-elo_diff_loser))
 }
