@@ -258,10 +258,43 @@
 	font-size: 24pt;
 	text-align: center;
     }
+
+    #connect {
+	width: 100%;
+	min-height: 100%;
+	display: none;
+	background: #005953;
+    }
+    #connect_screen {
+	width: 100%;
+	height: 100%;
+	min-height: 100%;
+	display: grid;
+	grid-template-columns: 100px 1fr 100px;
+	grid-template-rows: 1fr 1fr 1fr;
+    }
+    #connect_title {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+ 	grid-column: 2 / 3;
+	grid-row: 2 / 3;
+	color: white;
+	font-weight: bold;
+	font-size: 60;
+	text-align: center;
+	overflow: hidden;
+    }
   </style>
 
   <body>
     <pre id="debug"></pre>
+
+    <div id="connect">
+	    <div id="connect_screen">
+		    <div id="connect_title">Waiting for server connection...</div>
+	    </div>
+    </div>
 
     <div id="error">
 	    <div id="error_screen">
@@ -352,7 +385,7 @@
     </div>
 
     <script>
-      var screens = ["duel", "decision", "timeout", "leaderboard", "splash", "error"];
+      var screens = ["duel", "decision", "timeout", "leaderboard", "splash", "error", "connect"];
 
       function displayScreen(s) {
 	for (i in screens) {
@@ -511,6 +544,9 @@
 		  ping_started = true;
 		  setInterval(ping, 3000);
 		}
+	      	var el = document.getElementById("connect_title");
+		el.innerText = "Waiting for game server command...";
+		displayScreen("connect");
 	      }
 
 	      function ping() {
@@ -518,9 +554,12 @@
 		  ws.send("PING: {}");
 		}
 	      }
-	      
+
 	      ws.onclose = function(e) {
 		ws = undefined;
+	      	var el = document.getElementById("connect_title");
+		el.innerText = "Waiting for server connection...";
+		displayScreen("connect");
 		setTimeout(function() {
 		  connect();
 		}, 1000);
@@ -528,6 +567,9 @@
 
 	      ws.onerror = function(e) {
 		ws = undefined;
+	      	var el = document.getElementById("connect_title");
+		el.innerText = "Waiting for server connection...";
+		displayScreen("connect");
 		setTimeout(function() {
 		  connect();
 		}, 1000);
@@ -583,6 +625,7 @@
 		}
 	      }
       }
+      displayScreen("connect");
       connect();
     </script>
   </body>
