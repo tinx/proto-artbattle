@@ -131,6 +131,13 @@ func updateArtworkRecord(path string, artist string, title string, panel string)
 	}
 	if a != nil {
 		// file is already know to our database -> do nothing
+		if a.Title == title && a.Artist == artist && a.Panel == panel {
+			return
+		}
+		a.Title = title
+		a.Artist = artist
+		a.Panel = panel
+		db.UpdateArtwork(a)
 		return
 	}
 	fmt.Println("No record found, adding to database.")
