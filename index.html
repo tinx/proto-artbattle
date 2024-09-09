@@ -417,7 +417,11 @@
 		continue;
           } else {
 	    lb_div.style.display = "grid";
-	    lb_img.src = "/" + json.entries[i].filename;
+	    var imgsrc = json.entries[i].filename;
+	    if (json.entries[i].thumbnail != "") {
+	      imgsrc = json.entries[i].thumbnail;
+	    }
+	    lb_img.src = "/" + imgsrc;
 	    json.entries[i].title = json.entries[i].title.replace(/ /g, '&nbsp;');
 	    json.entries[i].artist = json.entries[i].artist.replace(/ /g, '&nbsp;');
 	    lb_text.innerHTML = `<div><b>${json.entries[i].title}</b><br>${json.entries[i].artist}<br>Art Show Panel: ${json.entries[i].panel}</div>`;
@@ -598,7 +602,6 @@
 		    return;
 		  }
 		}
-		var el = document.getElementById("debug");
 		if (msg_type == "PONG") {
 		  // do nothing
 		} else if (msg_type == "SPLASH") {
@@ -620,8 +623,7 @@
 		  updateErrorScreen(json);
 		  displayScreen("error");
 		} else {
-		  // displayScreen("duel");
-		  el.innerText = "event: " + mparts[0]; // + "\n" + mparts[1];
+		  console.log("unknown message type: " + msg_type);
 		}
 	      }
       }

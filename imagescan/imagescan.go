@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 	"fmt"
 	"encoding/json"
+	"errors"
 	"os"
 	"os/exec"
 	"regexp"
@@ -69,42 +70,65 @@ func ScanEntry(path string, info os.FileInfo, err error) error {
 		return nil // not err -> continue with next file
 	}
 
-	parseExifUserComment(path, usercomment)
+	thumbnail, err := checkForThumbnail(path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error checking for thumbnail of file=%s, error: %s", path, err)
+		return nil // not err -> continue with next file
+	}
+
+	artist, title, panel, err := parseExifUserComment(path, usercomment)
+	updateArtworkRecord(path, artist, title, panel, thumbnail)
 	return nil
 }
 
-func parseExifUserComment(path string, usercomment string) {
+func checkForThumbnail(path string) (string, error) {
+	var re = regexp.MustCompile(`^(.*)(\.(jpg|jpeg|JPG|JPEG))`)
+	s := re.ReplaceAllString(path, `${1}_tn${2}`)
+
+	_, err := os.Stat(s)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			/* no thumbnail for this image */
+			return "", nil
+		} else {
+			return "", err
+		}
+	}
+	return s, nil
+}
+
+func parseExifUserComment(path string, usercomment string) (string, string, string, error) {
 	lines := strings.Split(usercomment, "\n")
 
 	if len(lines) < 4 {
 		fmt.Fprintf(os.Stderr, "warn: short exif data, path=%s\n", path)
-		return
+		return "", "", "", errors.New("short exif data, path: " + path)
 	}
 
 	/* verifz format version */
 	tag_version, err := splitLine(path, lines[0], "ef-artshow-tags-version")
 	if err != nil {
-		return
+		return "", "", "", err
 	}
 	if tag_version != "v1" {
 		fmt.Fprintf(os.Stderr, "warn: unexpected tags version: %s, path=%s\n", tag_version, path)
-		return
+		return "", "", "", errors.New("unexpected tags version: " + tag_version + ", file=" + path)
 	}
 
 	artist, err := splitLine(path, lines[1], "artist")
 	if err != nil {
-		return
+		return "", "", "", err
 	}
 	title, err := splitLine(path, lines[2], "title")
 	if err != nil {
-		return
+		return "", "", "", err
 	}
 	panel, err := splitLine(path, lines[3], "panel")
 	if err != nil {
-		return
+		return "", "", "", err
 	}
 
-	updateArtworkRecord(path, artist, title, panel)
+	return artist, title, panel, nil
 }
 
 func splitLine(path string, line string, expected_key string) (value string, err error) {
@@ -122,7 +146,7 @@ func splitLine(path string, line string, expected_key string) (value string, err
 	return value, nil
 }
 
-func updateArtworkRecord(path string, artist string, title string, panel string) {
+func updateArtworkRecord(path string, artist string, title string, panel string, thumbnail string) {
 	db, err := database.GetDB();
 	a, err := db.GetArtworkByFilename(path)
 	if err != nil {
@@ -131,21 +155,22 @@ func updateArtworkRecord(path string, artist string, title string, panel string)
 	}
 	if a != nil {
 		// file is already know to our database -> do nothing
-		if a.Title == title && a.Artist == artist && a.Panel == panel {
+		if a.Title == title && a.Artist == artist && a.Panel == panel && a.Thumbnail == thumbnail {
 			return
 		}
 		a.Title = title
 		a.Artist = artist
 		a.Panel = panel
+		a.Thumbnail = thumbnail
 		db.UpdateArtwork(a)
 		return
 	}
-	fmt.Println("No record found, adding to database.")
 	a = &database.Artwork{
 		Title: title,
 		Artist: artist,
 		Panel: panel,
 		Filename: path,
+		Thumbnail: thumbnail,
 		EloRating: int16(config.RatingDefaultPoints()),
 		DuelCount: 0,
 	}

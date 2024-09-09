@@ -14,6 +14,7 @@ type Artwork struct {
 	Artist		string	`gorm:"type:varchar(120); NOT NULL"`
 	Panel		string	`gorm:"type:varchar(10); NOT NULL"`
 	Filename	string	`gorm:"type:varchar(120); NOT NULL"`
+	Thumbnail	string	`gorm:"type:varchar(120); NOT NULL"`
 	DuelCount	uint64	`gorm:"index:idx_duel_count"`
 	EloRating	int16	`gorm:"index:idx_elo_rating"`
 }

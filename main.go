@@ -9,7 +9,6 @@ import (
 	"os"
 	"time"
 
-//	"github.com/fsnotify/fsnotify"
 	"github.com/olahol/melody"
 	"github.com/tinx/proto-artbattle/database"
 	"github.com/tinx/proto-artbattle/imagescan"
@@ -24,6 +23,7 @@ type ArtworkDTO struct {
 	Title		string `json:"title"`
 	Artist		string `json:"artist"`
 	Filename	string `json:"filename"`
+	Thumbnail	string `json:"thumbnail"`
 	Panel		string `json:"panel"`
 	EloRating	int16 `json:"elo_rating"`
 	DuelCount	uint64 `json:"duel_count"`
@@ -309,6 +309,7 @@ func encodeArtworkToDTO(a *database.Artwork, dto *ArtworkDTO) {
 	dto.Title = a.Title
 	dto.Artist = a.Artist
 	dto.Filename = a.Filename
+	dto.Thumbnail = a.Thumbnail
 	dto.Panel = a.Panel
 	dto.EloRating = a.EloRating
 	dto.DuelCount = a.DuelCount
