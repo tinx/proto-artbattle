@@ -30,8 +30,8 @@ type ArtworkDTO struct {
 }
 
 type DuelDTO struct {
-	Red		ArtworkDTO `json:"red"`
-	Blue		ArtworkDTO `json:"blue"`
+	One		ArtworkDTO `json:"one"`
+	Two		ArtworkDTO `json:"two"`
 }
 
 type LeaderboardDTO struct {
@@ -40,13 +40,13 @@ type LeaderboardDTO struct {
 }
 
 type DecisionDTO struct {
-	Red		ArtworkDTO `json:"red"`
-	Blue		ArtworkDTO `json:"blue"`
+	One		ArtworkDTO `json:"one"`
+	Two		ArtworkDTO `json:"two"`
 	Winner		string `json:"winner"`
-	RedEloDiff	int16 `json:"red_elo_diff"`
-	RedRankDiff	int64 `json:"red_rank_diff"`
-	BlueEloDiff	int16 `json:"blue_elo_diff"`
-	BlueRankDiff	int64 `json:"blue_rank_diff"`
+	OneEloDiff	int16 `json:"one_elo_diff"`
+	OneRankDiff	int64 `json:"one_rank_diff"`
+	TwoEloDiff	int16 `json:"two_elo_diff"`
+	TwoRankDiff	int64 `json:"two_rank_diff"`
 }
 
 type ErrorDTO struct {
@@ -147,7 +147,7 @@ func main() {
 				fmt.Fprintf(os.Stderr, "error unmarshalling button dto: %s\n", err)
 				return
 			}
-			if dto.Button != "b" && dto.Button != "r" {
+			if dto.Button != "1" && dto.Button != "2" {
 				fmt.Fprintf(os.Stderr, "unexpected button: %s\n", dto.Button)
 				return
 			}
@@ -316,8 +316,8 @@ func encodeArtworkToDTO(a *database.Artwork, dto *ArtworkDTO) {
 
 func encodeDuelToJson(a1, a2 *database.Artwork) (string, error) {
 	var dto DuelDTO
-	encodeArtworkToDTO(a1, &dto.Red)
-	encodeArtworkToDTO(a2, &dto.Blue)
+	encodeArtworkToDTO(a1, &dto.One)
+	encodeArtworkToDTO(a2, &dto.Two)
 	j, err := json.Marshal(dto)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "json marhsal error: %s\n", err)
@@ -395,13 +395,13 @@ func processDecision(db *database.MysqlRepository, a1 *database.Artwork, a2 *dat
 		duel.Duelist2 = a2.ID
 		duel.When = time.Now()
 		/* Adjust depending on decision */
-		if decision == 'r' {
+		if decision == '1' {
 			a1ed, a2ed = eloRatingAdjustments(a1.EloRating, a2.EloRating)
-			winner = "red"
+			winner = "one"
 			duel.Winner = a1.ID
-		} else if decision == 'b' {
+		} else if decision == '2' {
 			a2ed, a1ed = eloRatingAdjustments(a2.EloRating, a1.EloRating)
-			winner = "blue"
+			winner = "two"
 			duel.Winner = a2.ID
 		} else {
 			return fmt.Errorf("unexpected decision: %c\n", decision)
@@ -409,8 +409,8 @@ func processDecision(db *database.MysqlRepository, a1 *database.Artwork, a2 *dat
 
 		a1.EloRating = a1.EloRating + a1ed
 		a2.EloRating = a2.EloRating + a2ed
-		dto.RedEloDiff = a1ed
-		dto.BlueEloDiff = a2ed
+		dto.OneEloDiff = a1ed
+		dto.TwoEloDiff = a2ed
 
 		a1.DuelCount = a1.DuelCount + 1
 		a2.DuelCount = a2.DuelCount + 1
@@ -432,8 +432,8 @@ func processDecision(db *database.MysqlRepository, a1 *database.Artwork, a2 *dat
 			return nil
 		}
 
-		dto.RedRankDiff = a1_rank_old - a1_rank_new
-		dto.BlueRankDiff = a2_rank_old - a2_rank_new
+		dto.OneRankDiff = a1_rank_old - a1_rank_new
+		dto.TwoRankDiff = a2_rank_old - a2_rank_new
 		dto.Winner = winner
 
 		err = database.AddDuel(tx, &duel)
@@ -448,8 +448,8 @@ func processDecision(db *database.MysqlRepository, a1 *database.Artwork, a2 *dat
 		return "", err
 	}
 
-	encodeArtworkToDTO(a1, &dto.Red)
-	encodeArtworkToDTO(a2, &dto.Blue)
+	encodeArtworkToDTO(a1, &dto.One)
+	encodeArtworkToDTO(a2, &dto.Two)
 
 	j, err := json.Marshal(dto)
 	if err != nil {

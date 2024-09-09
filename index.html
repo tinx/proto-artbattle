@@ -64,9 +64,7 @@
     #splash_stats {
  	grid-column: 2 / 3;
 	grid-row: 6 / 7;
-	display: flex;
-	justify-content: center;
-	align-items: center;
+	text-align: center;
 	font-size: 24;
 	color: white;
     }
@@ -416,19 +414,19 @@
       function updateDuelScreen(json) {
 	resetDuelScreenCSS();
 	var el = document.getElementById("duel_title");
-        el.innerText = json.red.title + " vs. " + json.blue.title;
+        el.innerText = json.one.title + " vs. " + json.two.title;
 	var img1 = document.getElementById("duel_img_1");
-	img1.src = "/" + json.red.filename;
+	img1.src = "/" + json.one.filename;
 	var img2 = document.getElementById("duel_img_2");
-	img2.src = "/" + json.blue.filename;
+	img2.src = "/" + json.two.filename;
 	var t1 = document.getElementById("duel_text_1");
-	t1.innerHTML = `<span class=\"dot\" id=\"red_dot\" style=\"background: red\"></span><div><b style="font-size: 24pt">${json.red.title}</b><br><b>${json.red.artist}</b><br>Elo Rating: ${json.red.elo_rating}<br>Art Show Panel: ${json.blue.panel}</div>`;
+	t1.innerHTML = `<span class=\"dot\" id=\"red_dot\" style=\"background: red\"></span><div><b style="font-size: 24pt">${json.one.title}</b><br><b>${json.one.artist}</b><br>Elo Rating: ${json.one.elo_rating}<br>Art Show Panel: ${json.one.panel}</div>`;
 	var t2 = document.getElementById("duel_text_2");
-	t2.innerHTML = `<span class=\"dot\" id=\"blue_dot\" style=\"background: blue\"></span><div><b style="font-size: 24pt">${json.blue.title}</b><br><b>${json.blue.artist}</b><br>Elo Rating: ${json.blue.elo_rating}<br>Art Show Panel: ${json.blue.panel}</div>`;
+	t2.innerHTML = `<span class=\"dot\" id=\"blue_dot\" style=\"background: blue\"></span><div><b style="font-size: 24pt">${json.two.title}</b><br><b>${json.two.artist}</b><br>Elo Rating: ${json.two.elo_rating}<br>Art Show Panel: ${json.two.panel}</div>`;
 	var rd = document.getElementById("red_dot");
-	rd.onclick = function () { buttonPress("r"); };
+	rd.onclick = function () { buttonPress("1"); };
 	var bd = document.getElementById("blue_dot");
-	bd.onclick = function () { buttonPress("b"); };
+	bd.onclick = function () { buttonPress("2"); };
       }
 
       function updateTimeoutScreen(json) {
@@ -436,11 +434,11 @@
 	var el = document.getElementById("duel_title");
         el.innerText = "Timeout";
 	var img1 = document.getElementById("duel_img_1");
-	img1.src = "/" + json.red.filename;
+	img1.src = "/" + json.one.filename;
 	img1.style.filter = "saturate(0%)";
 	img1.style.opacity = "0.4";
 	var img2 = document.getElementById("duel_img_2");
-	img2.src = "/" + json.blue.filename;
+	img2.src = "/" + json.two.filename;
 	img2.style.filter = "saturate(0%)";
 	img2.style.opacity = "0.4";
 	var t1 = document.getElementById("duel_text_1");
@@ -452,11 +450,11 @@
       function updateDecisionScreen(json) {
 	resetDuelScreenCSS();
 	var el = document.getElementById("duel_title");
-        el.innerText = json.red.title + " vs. " + json.blue.title;
+        el.innerText = json.one.title + " vs. " + json.two.title;
 	var img1 = document.getElementById("duel_img_1");
-	img1.src = "/" + json.red.filename;
+	img1.src = "/" + json.one.filename;
 	var img2 = document.getElementById("duel_img_2");
-	img2.src = "/" + json.blue.filename;
+	img2.src = "/" + json.two.filename;
 	var t1 = document.getElementById("duel_text_1");
 	var t2 = document.getElementById("duel_text_2");
 
@@ -469,26 +467,26 @@
 	var loser_elo_diff;
 	var winner_rank_diff;
 	var loser_rank_diff;
-	if (json.winner == "red") {
-	  winner = json.red;
+	if (json.winner == "one") {
+	  winner = json.one;
           el_winner_text = t1;
 	  el_loser_text = t2;
 	  el_winner_img = img1;
 	  el_loser_img = img2;
-	  winner_elo_diff = json.red_elo_diff;
-	  winner_rank_diff = json.red_elo_diff;
-	  loser_elo_diff = json.blue_elo_diff;
-	  loser_rank_diff = json.blue_elo_diff;
+	  winner_elo_diff = json.one_elo_diff;
+	  winner_rank_diff = json.one_elo_diff;
+	  loser_elo_diff = json.two_elo_diff;
+	  loser_rank_diff = json.two_elo_diff;
 	} else {
-	  winner = json.blue;
+	  winner = json.two;
           el_winner_text = t2;
 	  el_loser_text = t1;
 	  el_winner_img = img2;
 	  el_loser_img = img1;
-	  winner_elo_diff = json.blue_elo_diff;
-	  winner_rank_diff = json.blue_elo_diff;
-	  loser_elo_diff = json.red_elo_diff;
-	  loser_rank_diff = json.red_elo_diff;
+	  winner_elo_diff = json.two_elo_diff;
+	  winner_rank_diff = json.two_elo_diff;
+	  loser_elo_diff = json.one_elo_diff;
+	  loser_rank_diff = json.one_elo_diff;
 	}
 	el_winner_text.innerHTML = `<div class=\"duel-winner\"">Winner!<pre>${winner_elo_diff} Elo Rating Points</pre></div>`;
         el_loser_text.innerHTML = `<div class=\"duel-loser\"">Loser<pre>${loser_elo_diff} Elo Rating Points</pre></div>`;
