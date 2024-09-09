@@ -399,10 +399,18 @@ func processDecision(db *database.MysqlRepository, a1 *database.Artwork, a2 *dat
 			a1ed, a2ed = eloRatingAdjustments(a1.EloRating, a2.EloRating)
 			winner = "one"
 			duel.Winner = a1.ID
+			if a1ed > a2.EloRating {
+				a1ed = a2.EloRating
+				a2ed = - a2.EloRating
+			}
 		} else if decision == '2' {
 			a2ed, a1ed = eloRatingAdjustments(a2.EloRating, a1.EloRating)
 			winner = "two"
 			duel.Winner = a2.ID
+			if a2ed > a1.EloRating {
+				a2ed = a1.EloRating
+				a1ed = - a1.EloRating
+			}
 		} else {
 			return fmt.Errorf("unexpected decision: %c\n", decision)
 		}
