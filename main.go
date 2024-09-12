@@ -133,7 +133,8 @@ func main() {
 				os.Exit(1)
 			}
 			if count > 0 {
-				sp <- buf[count-1:count]
+				//sp <- buf[count-1:count]
+				sp <- buf[0:1]
 			}
 		}
 	}()
@@ -266,13 +267,24 @@ func waitForSerialPort(c chan []byte, timeout time.Duration) string {
 			break Loop
 		}
 	}
-	select {
-	case ret := <-c:
-		return string(ret)
-	case <-time.After(timeout):
+	for {
+		select {
+		case ret := <-c:
+			input := ""
+			for _, b := range(ret) {
+				if (b == '1' || b == '2') {
+					input = input + string(b)
+				}
+			}
+			if (input == "") {
+				continue
+			}
+			return string(input)
+		case <-time.After(timeout):
+			return ""
+		}
 		return ""
 	}
-	return ""
 }
 
 func generateDuel(db *database.MysqlRepository) (*database.Artwork, *database.Artwork, error) {

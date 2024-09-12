@@ -11,7 +11,7 @@ database:
     - "parseTime=True"
     - "loc=Local"
 serial_port:
-  device_file: "/dev/pts/5"
+  device_file: "/dev/ttyUSB0"
 rating:
   default_points: 800
   k_factor: 16

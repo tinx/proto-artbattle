@@ -82,13 +82,23 @@
 	min-height: 100%;
 	display: grid;
 	grid-template-columns: 50px 1fr 100px 1fr 50px;
-	grid-template-rows: 15% 1fr 15%;
+	grid-template-rows: 15% 1fr 20%;
     }
-    #duel_title {
+    #duel_title_one {
+ 	grid-column: 2 / 3;
+    }
+    #duel_title_vs {
+ 	grid-column: 3 / 4;
+	color: #69a3a2;
+	font-size: 60;
+    }
+    #duel_title_two {
+ 	grid-column: 4 / 5;
+    }
+    .duel_title {
 	display: flex;
 	justify-content: center;
 	align-items: center;
- 	grid-column: 1 / 6;
 	grid-row: 1 / 2;
 	color: white;
 	font-weight: bold;
@@ -131,10 +141,18 @@
 	color: white;
     }
 
-    .duel-winner {
+    .duel-winner-one {
 	font-size: 30;
 	font-weight: bold;
 	background: red;
+	position: relative;
+	top: -50px;
+	padding: 20px 100px 20px 100px;
+    }
+    .duel-winner-two {
+	font-size: 30;
+	font-weight: bold;
+	background: blue;
 	position: relative;
 	top: -50px;
 	padding: 20px 100px 20px 100px;
@@ -305,7 +323,7 @@
 
     <div id="splash">
 	    <div id="splash_screen">
-		    <div id="splash_title">Art Battle</div>
+		    <div id="splash_title">Art Battle<br>- press any button to play -</div>
 		    <div id="splash_text">
 			    <p><b>Two go in, one comes out.</b> Here, we pit two pieces of artwork
 			    against each other, and you get to decide which one wins.</p>
@@ -320,7 +338,9 @@
 
     <div id="duel">
 	    <div id="duel_screen">
-		    <div id="duel_title"></div>
+		    <div class="duel_title" id="duel_title_one"></div>
+		    <div class="duel_title" id="duel_title_vs">vs.</div>
+		    <div class="duel_title" id="duel_title_two"></div>
 		    <div class="duel-images" id="duel_image_1"><img id="duel_img_1" src=""></div>
 		    <div class="duel-images" id="duel_image_2"><img id="duel_img_2" src=""></div>
 		    <div id="duel_text_1"></div>
@@ -450,8 +470,10 @@
 
       function updateDuelScreen(json) {
 	resetDuelScreenCSS();
-	var el = document.getElementById("duel_title");
-        el.innerText = json.one.title + " vs. " + json.two.title;
+	var el = document.getElementById("duel_title_one");
+        el.innerHTML = json.one.title;
+	var el = document.getElementById("duel_title_two");
+        el.innerHTML = json.two.title;
 	var img1 = document.getElementById("duel_img_1");
 	img1.src = "/images/" + json.one.filename;
 	var img2 = document.getElementById("duel_img_2");
@@ -468,7 +490,9 @@
 
       function updateTimeoutScreen(json) {
 	resetDuelScreenCSS();
-	var el = document.getElementById("duel_title");
+	var el = document.getElementById("duel_title_one");
+        el.innerHTML = json.one.title;
+	var el = document.getElementById("duel_title_two");
         el.innerText = "Timeout";
 	var img1 = document.getElementById("duel_img_1");
 	img1.src = "/images/" + json.one.filename;
@@ -486,8 +510,10 @@
 
       function updateDecisionScreen(json) {
 	resetDuelScreenCSS();
-	var el = document.getElementById("duel_title");
-        el.innerText = json.one.title + " vs. " + json.two.title;
+	var el = document.getElementById("duel_title_one");
+        el.innerHTML = json.one.title;
+	var el = document.getElementById("duel_title_two");
+        el.innerText = "Timeout";
 	var img1 = document.getElementById("duel_img_1");
 	img1.src = "/images/" + json.one.filename;
 	var img2 = document.getElementById("duel_img_2");
@@ -504,6 +530,7 @@
 	var loser_elo_diff;
 	var winner_rank_diff;
 	var loser_rank_diff;
+	var winner_class;
 	if (json.winner == "one") {
 	  winner = json.one;
           el_winner_text = t1;
@@ -514,6 +541,7 @@
 	  winner_rank_diff = json.one_elo_diff;
 	  loser_elo_diff = json.two_elo_diff;
 	  loser_rank_diff = json.two_elo_diff;
+	  winner_class = "duel-winner-one";
 	} else {
 	  winner = json.two;
           el_winner_text = t2;
@@ -524,8 +552,9 @@
 	  winner_rank_diff = json.two_elo_diff;
 	  loser_elo_diff = json.one_elo_diff;
 	  loser_rank_diff = json.one_elo_diff;
+	  winner_class = "duel-winner-two";
 	}
-	el_winner_text.innerHTML = `<div class=\"duel-winner\"">Winner!<pre>${winner_elo_diff} Elo Rating Points</pre></div>`;
+	el_winner_text.innerHTML = `<div class=\"`+winner_class+`\"">Winner!<pre>${winner_elo_diff} Elo Rating Points</pre></div>`;
         el_loser_text.innerHTML = `<div class=\"duel-loser\"">Loser<pre>${loser_elo_diff} Elo Rating Points</pre></div>`;
 	el_loser_img.style.filter = "saturate(0%)";
 	el_loser_img.style.opacity = "0.4";
