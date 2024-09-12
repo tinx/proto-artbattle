@@ -147,6 +147,10 @@ func splitLine(path string, line string, expected_key string) (value string, err
 }
 
 func updateArtworkRecord(path string, artist string, title string, panel string, thumbnail string) {
+	path = path[len(config.ImagePath()):]
+	if thumbnail != "" {
+		thumbnail = thumbnail[len(config.ImagePath()):]
+	}
 	db, err := database.GetDB();
 	a, err := db.GetArtworkByFilename(path)
 	if err != nil {

@@ -421,7 +421,7 @@
 	    if (json.entries[i].thumbnail != "") {
 	      imgsrc = json.entries[i].thumbnail;
 	    }
-	    lb_img.src = "/" + imgsrc;
+	    lb_img.src = "/images/" + imgsrc;
 	    json.entries[i].title = json.entries[i].title.replace(/ /g, '&nbsp;');
 	    json.entries[i].artist = json.entries[i].artist.replace(/ /g, '&nbsp;');
 	    lb_text.innerHTML = `<div><b>${json.entries[i].title}</b><br>${json.entries[i].artist}<br>Art Show Panel: ${json.entries[i].panel}</div>`;
@@ -453,9 +453,9 @@
 	var el = document.getElementById("duel_title");
         el.innerText = json.one.title + " vs. " + json.two.title;
 	var img1 = document.getElementById("duel_img_1");
-	img1.src = "/" + json.one.filename;
+	img1.src = "/images/" + json.one.filename;
 	var img2 = document.getElementById("duel_img_2");
-	img2.src = "/" + json.two.filename;
+	img2.src = "/images/" + json.two.filename;
 	var t1 = document.getElementById("duel_text_1");
 	t1.innerHTML = `<span class=\"dot\" id=\"red_dot\" style=\"background: red\"></span><div><b style="font-size: 24pt">${json.one.title}</b><br><b>${json.one.artist}</b><br>Elo Rating: ${json.one.elo_rating}<br>Art Show Panel: ${json.one.panel}</div>`;
 	var t2 = document.getElementById("duel_text_2");
@@ -471,11 +471,11 @@
 	var el = document.getElementById("duel_title");
         el.innerText = "Timeout";
 	var img1 = document.getElementById("duel_img_1");
-	img1.src = "/" + json.one.filename;
+	img1.src = "/images/" + json.one.filename;
 	img1.style.filter = "saturate(0%)";
 	img1.style.opacity = "0.4";
 	var img2 = document.getElementById("duel_img_2");
-	img2.src = "/" + json.two.filename;
+	img2.src = "/images/" + json.two.filename;
 	img2.style.filter = "saturate(0%)";
 	img2.style.opacity = "0.4";
 	var t1 = document.getElementById("duel_text_1");
@@ -489,9 +489,9 @@
 	var el = document.getElementById("duel_title");
         el.innerText = json.one.title + " vs. " + json.two.title;
 	var img1 = document.getElementById("duel_img_1");
-	img1.src = "/" + json.one.filename;
+	img1.src = "/images/" + json.one.filename;
 	var img2 = document.getElementById("duel_img_2");
-	img2.src = "/" + json.two.filename;
+	img2.src = "/images/" + json.two.filename;
 	var t1 = document.getElementById("duel_text_1");
 	var t2 = document.getElementById("duel_text_2");
 
