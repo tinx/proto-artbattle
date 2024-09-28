@@ -491,7 +491,7 @@
       function updateTimeoutScreen(json) {
 	resetDuelScreenCSS();
 	var el = document.getElementById("duel_title_one");
-        el.innerHTML = json.one.title;
+        el.innerText = "Timeout";
 	var el = document.getElementById("duel_title_two");
         el.innerText = "Timeout";
 	var img1 = document.getElementById("duel_img_1");
@@ -513,7 +513,7 @@
 	var el = document.getElementById("duel_title_one");
         el.innerHTML = json.one.title;
 	var el = document.getElementById("duel_title_two");
-        el.innerText = "Timeout";
+        el.innerText = json.two.title;
 	var img1 = document.getElementById("duel_img_1");
 	img1.src = "/images/" + json.one.filename;
 	var img2 = document.getElementById("duel_img_2");
